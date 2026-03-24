@@ -1,0 +1,359 @@
+// Prisma Schema for KupitStul.ru
+// Migration from lowdb (JSON) to PostgreSQL
+// Run: npx prisma migrate dev --name init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ==========================================
+// CATEGORIES
+// ==========================================
+
+model Category {
+  id          String   @id @default(cuid())
+  name        String
+  slug        String   @unique
+  description String?
+  image       String?
+  icon        String?
+  parentId    String?
+  parent      Category?  @relation("CategoryTree", fields: [parentId], references: [id])
+  children    Category[] @relation("CategoryTree")
+  order       Int        @default(0)
+  isActive    Boolean    @default(true)
+
+  // SEO
+  seoTitle       String?
+  seoDescription String?
+  seoKeywords    String[]
+
+  // Relations
+  products Product[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([slug])
+  @@index([parentId])
+}
+
+// ==========================================
+// PRODUCTS
+// ==========================================
+
+model Product {
+  id               String        @id @default(cuid())
+  name             String
+  slug             String        @unique
+  sku              String?       @unique
+  description      String?
+  shortDescription String?
+
+  // Pricing
+  price         Float
+  originalPrice Float?
+  costPrice     Float?
+
+  // Stock
+  inStock    Boolean @default(true)
+  stockCount Int?
+
+  // Category
+  categoryId String
+  category   Category @relation(fields: [categoryId], references: [id])
+
+  // Media (stored as JSON for flexibility)
+  images Json @default("[]") // Array of image URLs
+  video  String?
+
+  // Parameters / Specifications (JSON for flexibility)
+  specifications Json @default("{}")
+  colors         Json @default("[]") // Array of {name, hex}
+
+  // Tags & Badges
+  tags   String[]
+  badges String[]
+
+  // SEO
+  seoTitle       String?
+  seoDescription String?
+  seoKeywords    String[]
+
+  // Status
+  status String @default("active") // draft, active, hidden, out-of-stock, archived
+
+  // Avito sync
+  avitoId  String?
+  avitoUrl String?
+
+  // Stats
+  viewCount   Int    @default(0)
+  orderCount  Int    @default(0)
+  rating      Float?
+  reviewCount Int    @default(0)
+
+  // Relations
+  orderItems OrderItem[]
+  reviews    Review[]
+  variants   ProductVariant[]
+
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  publishedAt DateTime?
+
+  @@index([slug])
+  @@index([categoryId])
+  @@index([price])
+  @@index([status])
+  @@index([inStock])
+  @@index([avitoId])
+  @@fulltext([name, description])
+}
+
+// ==========================================
+// PRODUCT VARIANTS
+// ==========================================
+
+model ProductVariant {
+  id        String  @id @default(cuid())
+  productId String
+  product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+  sku       String?
+  name      String  // "Серый велюр"
+
+  price         Float?
+  originalPrice Float?
+  inStock       Boolean @default(true)
+  stockCount    Int?
+
+  // Variant parameters (JSON)
+  parameters Json @default("{}")
+  image      String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([productId])
+}
+
+// ==========================================
+// CUSTOMERS
+// ==========================================
+
+model Customer {
+  id        String  @id @default(cuid())
+  email     String? @unique
+  phone     String  @unique
+  firstName String
+  lastName  String?
+
+  // Addresses (JSON array)
+  addresses Json @default("[]")
+
+  // Relations
+  orders Order[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([email])
+  @@index([phone])
+}
+
+// ==========================================
+// ORDERS (CRM)
+// ==========================================
+
+model Order {
+  id          String @id @default(cuid())
+  orderNumber String @unique // KS-2025-00001
+
+  // Customer
+  customerId String?
+  customer   Customer? @relation(fields: [customerId], references: [id])
+
+  // Contact info (snapshot)
+  customerName  String
+  customerPhone String
+  customerEmail String?
+
+  // Status
+  status String @default("new") // new, confirmed, paid, processing, shipped, delivered, cancelled, refunded
+
+  // Items
+  items OrderItem[]
+
+  // Pricing
+  subtotal      Float
+  discount      Float    @default(0)
+  deliveryPrice Float    @default(0)
+  total         Float
+
+  // Promo
+  promoCode     String?
+  promoDiscount Float?
+
+  // Delivery
+  deliveryMethod String? // courier, pickup, cdek, pek
+  deliveryAddress Json?  // {city, street, house, apartment, zipCode}
+  trackingNumber  String?
+
+  // Payment
+  paymentMethod String? // cash, card, installment
+  paymentStatus String  @default("pending") // pending, paid, refunded
+  paymentId     String? // External payment ID (YooKassa)
+
+  // Notes
+  customerComment String?
+  adminComment    String?
+
+  // Status history (JSON array)
+  statusHistory Json @default("[]")
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([orderNumber])
+  @@index([customerId])
+  @@index([status])
+  @@index([createdAt])
+}
+
+model OrderItem {
+  id        String @id @default(cuid())
+  orderId   String
+  order     Order  @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  productId String
+  product   Product @relation(fields: [productId], references: [id])
+
+  // Snapshot at time of order
+  productName  String
+  productImage String?
+  productSku   String?
+
+  quantity Int
+  price    Float // Price per item at time of order
+  total    Float // quantity * price
+
+  @@index([orderId])
+  @@index([productId])
+}
+
+// ==========================================
+// REVIEWS
+// ==========================================
+
+model Review {
+  id        String @id @default(cuid())
+  productId String
+  product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  authorName  String
+  authorEmail String?
+  rating      Int // 1-5
+  title       String?
+  content     String
+  images      String[]
+
+  isApproved Boolean @default(false)
+  isVerified Boolean @default(false) // Verified purchase
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([productId])
+  @@index([isApproved])
+}
+
+// ==========================================
+// PROMO CODES
+// ==========================================
+
+model PromoCode {
+  id          String   @id @default(cuid())
+  code        String   @unique
+  description String?
+  
+  discountType  String // percent, fixed
+  discountValue Float
+  
+  minOrderAmount Float?
+  maxUsages      Int?
+  usedCount      Int     @default(0)
+  
+  isActive  Boolean  @default(true)
+  startsAt  DateTime?
+  expiresAt DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([code])
+}
+
+// ==========================================
+// IMPORT LOGS
+// ==========================================
+
+model ImportLog {
+  id       String   @id @default(cuid())
+  source   String   // avito, csv, manual
+  filename String?
+  
+  totalItems    Int @default(0)
+  importedItems Int @default(0)
+  skippedItems  Int @default(0)
+  errorItems    Int @default(0)
+  
+  status String @default("pending") // pending, processing, completed, failed
+  errors Json   @default("[]") // Array of error messages
+  
+  startedAt  DateTime?
+  finishedAt DateTime?
+  createdAt  DateTime @default(now())
+}
+
+// ==========================================
+// SITE SETTINGS
+// ==========================================
+
+model SiteSetting {
+  id    String @id @default(cuid())
+  key   String @unique
+  value Json
+  
+  updatedAt DateTime @updatedAt
+}
+
+// ==========================================
+// BLOG / ARTICLES
+// ==========================================
+
+model Article {
+  id          String   @id @default(cuid())
+  title       String
+  slug        String   @unique
+  excerpt     String?
+  content     String
+  coverImage  String?
+  tags        String[]
+  
+  isPublished Boolean  @default(false)
+  publishedAt DateTime?
+  
+  // SEO
+  seoTitle       String?
+  seoDescription String?
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  @@index([slug])
+  @@index([isPublished])
+}

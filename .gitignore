@@ -39,3 +39,24 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# uploads (user-generated files, not for git)
+/public/uploads/*
+!/public/uploads/.gitkeep
+
+# large data files (Excel imports)
+/data/*.xlsx
+/data/*.xls
+/data/*.csv
+
+# logs
+*.log
+build-output.log
+build.log
+dev-error.log
+dev-output.log
+.next-dev.log
+
+# OS
+.DS_Store
+Thumbs.db

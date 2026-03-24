@@ -1,0 +1,68 @@
+{
+  "products": [],
+  "categories": [],
+  "importLogs": [],
+  "orders": [
+    {
+      "id": "order_1774199563924_46giyu",
+      "number": "KS-2026-65693",
+      "customer": {
+        "name": "привет",
+        "phone": "+79269084158",
+        "email": "jobhunter@list.ru"
+      },
+      "delivery": {
+        "method": "courier",
+        "city": "Москва",
+        "address": "Privolnaya str 77, 48"
+      },
+      "payment": {
+        "method": "cash",
+        "status": "pending"
+      },
+      "comment": "",
+      "items": [
+        {
+          "productId": "f1_стулберрентон7венгетканьбаланс90",
+          "name": "Стул Беррен тон 7 венге-ткань Баланс 900",
+          "price": 6050,
+          "quantity": 1,
+          "image": "http://www.red-black.ru/custom/dimages/big/25/24762.jpg",
+          "slug": "stul-berren-ton-7-venge-tkan-balans-900-f1_стулб",
+          "total": 6050
+        },
+        {
+          "productId": "f1_7530583281",
+          "name": "Стул венский мягкий беленый дуб бежевая ткань",
+          "price": 6680,
+          "quantity": 1,
+          "image": "https://00.img.avito.st/image/1/1.GXgNp7awtZE7EDecM-83PEkGt5G9Dr2buw.J90R1Iiy7UUPekV7kGDhKpyfLdVD4Y5u1imDX_S6Uoo",
+          "slug": "stul-venskiy-myagkiy-belenyy-dub-bezhevaya-tkan-f1_75305",
+          "total": 6680
+        },
+        {
+          "productId": "f1_7530187473",
+          "name": "Стул венский мягкий эмаль белая бежевая ткань",
+          "price": 6690,
+          "quantity": 1,
+          "image": "https://00.img.avito.st/image/1/1.rVv2YLawAbLA14O_oFaKH7LBA7JGyQm4QA.kLurO_NzzprnrBr21KAt6meeA3LFDGNLUQiH41MY6uU",
+          "slug": "stul-venskiy-myagkiy-emal-belaya-bezhevaya-tkan-f1_75301",
+          "total": 6690
+        }
+      ],
+      "subtotal": 19420,
+      "deliveryPrice": 900,
+      "total": 20320,
+      "status": "new",
+      "statusHistory": [
+        {
+          "status": "new",
+          "comment": "Заказ создан",
+          "createdAt": "2026-03-22T17:12:43.924Z"
+        }
+      ],
+      "createdAt": "2026-03-22T17:12:43.925Z",
+      "updatedAt": "2026-03-22T17:12:43.925Z"
+    }
+  ]
+}

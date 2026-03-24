@@ -1,0 +1,101 @@
+{
+  "heroSlides": [
+    {
+      "url": "https://images.unsplash.com/photo-1555041469-a586c61ea9bc?w=1400&h=1000&fit=crop",
+      "alt": "Элегантный диван в современном интерьере",
+      "animation": "zoom-in-left"
+    },
+    {
+      "url": "/uploads/1772629293142-o56gh2.jpeg",
+      "alt": "Стильные стулья у обеденного стола",
+      "animation": "zoom-in-right"
+    },
+    {
+      "url": "https://images.unsplash.com/photo-1567538096630-e0c55bd6374c?w=1400&h=1000&fit=crop",
+      "alt": "Уютная гостиная с креслами",
+      "animation": "pan-left"
+    },
+    {
+      "url": "https://images.unsplash.com/photo-1618220179428-22790b461013?w=1400&h=1000&fit=crop",
+      "alt": "Минималистичный интерьер с дизайнерской мебелью",
+      "animation": "zoom-in-center"
+    },
+    {
+      "url": "https://images.unsplash.com/photo-1586023492125-27b2c045efd7?w=1400&h=1000&fit=crop",
+      "alt": "Светлая комната с элегантной мебелью",
+      "animation": "pan-right"
+    },
+    {
+      "url": "https://images.unsplash.com/photo-1493663284031-b7e3aefcae8e?w=1400&h=1000&fit=crop",
+      "alt": "Роскошный диван в гостиной",
+      "animation": "zoom-out"
+    }
+  ],
+  "categories": [
+    {
+      "id": "stulya",
+      "name": "Стулья",
+      "count": 1200,
+      "href": "/catalog/stulya",
+      "image": "/uploads/1772629665826-o158yi.jpeg"
+    },
+    {
+      "id": "stoly",
+      "name": "Столы",
+      "count": 450,
+      "href": "/catalog/stoly",
+      "image": "https://images.unsplash.com/photo-1611269154421-4e27233ac5c7?w=400&h=400&fit=crop"
+    },
+    {
+      "id": "kresla",
+      "name": "Кресла",
+      "count": 380,
+      "href": "/catalog/kresla",
+      "image": "https://images.unsplash.com/photo-1555041469-a586c61ea9bc?w=400&h=400&fit=crop"
+    },
+    {
+      "id": "divany",
+      "name": "Диваны",
+      "count": 120,
+      "href": "/catalog/divany",
+      "image": "https://images.unsplash.com/photo-1493663284031-b7e3aefcae8e?w=400&h=400&fit=crop"
+    },
+    {
+      "id": "banketki",
+      "name": "Банкетки",
+      "count": 95,
+      "href": "/catalog/banketki",
+      "image": "https://images.unsplash.com/photo-1631679706909-1844bbd07221?w=400&h=400&fit=crop"
+    },
+    {
+      "id": "osveschenie",
+      "name": "Освещение",
+      "count": 340,
+      "href": "/catalog/osveschenie",
+      "image": "https://images.unsplash.com/photo-1513506003901-1e6a229e2d15?w=400&h=400&fit=crop"
+    }
+  ],
+  "collections": [
+    {
+      "id": "horeca",
+      "name": "Для ресторанов",
+      "description": "HoReCa решения",
+      "href": "/catalog?purpose=horeca",
+      "image": "https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=800&h=600&fit=crop"
+    },
+    {
+      "id": "home",
+      "name": "Для дома",
+      "description": "Уют каждый день",
+      "href": "/catalog?purpose=home",
+      "image": "https://images.unsplash.com/photo-1586023492125-27b2c045efd7?w=800&h=600&fit=crop"
+    },
+    {
+      "id": "office",
+      "name": "Для офиса",
+      "description": "Эргономика и стиль",
+      "href": "/catalog?purpose=office",
+      "image": "https://images.unsplash.com/photo-1497366216548-37526070297c?w=800&h=600&fit=crop"
+    }
+  ]
+}

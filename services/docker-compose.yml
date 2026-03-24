@@ -1,0 +1,145 @@
+# =============================================
+# КупитьСтул — Docker Compose
+# Full-stack: Next.js + PHP + MySQL + Chat + Nginx
+# =============================================
+
+version: "3.8"
+
+services:
+  # ─── Nginx Reverse Proxy ────────────────────
+  nginx:
+    image: nginx:1.25-alpine
+    container_name: ks-nginx
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./docker/nginx/default.conf:/etc/nginx/conf.d/default.conf:ro
+      - ./frontend/chat-widget.js:/var/www/frontend/chat-widget.js:ro
+      # Uncomment for SSL:
+      # - ./docker/nginx/ssl:/etc/nginx/ssl:ro
+    depends_on:
+      - nextjs
+      - php-fpm
+      - chat-server
+    networks:
+      - ks-network
+
+  # ─── Next.js (Main Site) ────────────────────
+  nextjs:
+    build:
+      context: ../
+      dockerfile: Dockerfile
+    container_name: ks-nextjs
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
+    volumes:
+      - ../data:/app/data
+    networks:
+      - ks-network
+
+  # ─── PHP-FPM (Order Processing) ────────────
+  php-fpm:
+    build:
+      context: ./
+      dockerfile: docker/php/Dockerfile
+    container_name: ks-php
+    restart: unless-stopped
+    environment:
+      - DB_HOST=mysql
+      - DB_PORT=3306
+      - DB_NAME=kupitstul
+      - DB_USER=kupitstul
+      - DB_PASS=${DB_PASSWORD:-StrongPassword123!}
+      - SMTP_HOST=${SMTP_HOST:-smtp.yandex.ru}
+      - SMTP_PORT=${SMTP_PORT:-465}
+      - SMTP_ENC=${SMTP_ENC:-ssl}
+      - SMTP_USER=${SMTP_USER:-noreply@kupitstul.ru}
+      - SMTP_PASS=${SMTP_PASS:-}
+      - SMTP_FROM=${SMTP_FROM:-noreply@kupitstul.ru}
+      - ORDER_EMAIL=${ORDER_EMAIL:-jobhunter@list.ru}
+      - TG_BOT_TOKEN=${TG_BOT_TOKEN:-}
+      - TG_CHAT_ID=${TG_CHAT_ID:-}
+    depends_on:
+      mysql:
+        condition: service_healthy
+    networks:
+      - ks-network
+
+  # ─── Chat Server (WebSocket + MAX Relay) ────
+  chat-server:
+    build:
+      context: ./
+      dockerfile: docker/node/Dockerfile
+    container_name: ks-chat
+    restart: unless-stopped
+    ports:
+      - "3002:3002"
+    environment:
+      - CHAT_PORT=3002
+      - DB_HOST=mysql
+      - DB_PORT=3306
+      - DB_NAME=kupitstul
+      - DB_USER=kupitstul
+      - DB_PASS=${DB_PASSWORD:-StrongPassword123!}
+      - MAX_BOT_TOKEN=${MAX_BOT_TOKEN:-}
+      - MAX_WEBHOOK_URL=${MAX_WEBHOOK_URL:-}
+      - TG_BOT_TOKEN=${TG_BOT_TOKEN:-}
+      - TG_CHAT_ID=${TG_CHAT_ID:-}
+      - CORS_ORIGINS=${CORS_ORIGINS:-https://kupitstul.ru,https://www.kupitstul.ru,http://localhost:3000}
+    depends_on:
+      mysql:
+        condition: service_healthy
+    networks:
+      - ks-network
+
+  # ─── MySQL ─────────────────────────────────
+  mysql:
+    image: mysql:8.0
+    container_name: ks-mysql
+    restart: unless-stopped
+    environment:
+      - MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD:-RootStrongPassword123!}
+      - MYSQL_DATABASE=kupitstul
+      - MYSQL_USER=kupitstul
+      - MYSQL_PASSWORD=${DB_PASSWORD:-StrongPassword123!}
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./database/schema.sql:/docker-entrypoint-initdb.d/01-schema.sql:ro
+    command: >
+      --character-set-server=utf8mb4
+      --collation-server=utf8mb4_unicode_ci
+      --default-authentication-plugin=mysql_native_password
+      --event-scheduler=ON
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "mysqladmin",
+          "ping",
+          "-h",
+          "localhost",
+          "-u",
+          "kupitstul",
+          "-p${DB_PASSWORD:-StrongPassword123!}",
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    networks:
+      - ks-network
+
+volumes:
+  mysql_data:
+    driver: local
+
+networks:
+  ks-network:
+    driver: bridge

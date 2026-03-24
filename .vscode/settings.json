@@ -1,0 +1,10 @@
+{
+  "php.validate.enable": false,
+  "php.suggest.basic": false,
+  "[php]": {
+    "editor.formatOnSave": false
+  },
+  "files.associations": {
+    "*.php": "php"
+  }
+}

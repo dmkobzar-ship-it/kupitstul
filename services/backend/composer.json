@@ -1,0 +1,7 @@
+{
+  "name": "kupitstul-order-backend",
+  "description": "PHP order processing backend for КупитьСтул",
+  "require": {
+    "phpmailer/phpmailer": "^6.9"
+  }
+}

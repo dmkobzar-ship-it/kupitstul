@@ -1,0 +1,85 @@
+# KupitStul.ru - Docker Compose
+# Development & Production services
+
+services:
+  # === Next.js App ===
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
+      - DATABASE_URL=postgresql://kupitstul:kupitstul_secret@postgres:5432/kupitstul
+      - REDIS_URL=redis://redis:6379
+      - NEXT_PUBLIC_SITE_URL=https://kupitstul.ru
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    restart: unless-stopped
+    networks:
+      - kupitstul-network
+
+  # === PostgreSQL ===
+  postgres:
+    image: postgres:16-alpine
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: kupitstul
+      POSTGRES_PASSWORD: kupitstul_secret
+      POSTGRES_DB: kupitstul
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U kupitstul"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+    networks:
+      - kupitstul-network
+
+  # === Redis (Cache & Sessions) ===
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    command: redis-server --appendonly yes --maxmemory 256mb --maxmemory-policy allkeys-lru
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+    networks:
+      - kupitstul-network
+
+  # === Nginx (Reverse Proxy + SSL) ===
+  nginx:
+    image: nginx:alpine
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./nginx/ssl:/etc/nginx/ssl:ro
+      - ./public:/usr/share/nginx/html/static:ro
+    depends_on:
+      - app
+    restart: unless-stopped
+    networks:
+      - kupitstul-network
+
+volumes:
+  postgres_data:
+  redis_data:
+
+networks:
+  kupitstul-network:
+    driver: bridge
