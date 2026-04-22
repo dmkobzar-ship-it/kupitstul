@@ -17,10 +17,17 @@ export async function POST(request: NextRequest) {
       fs.mkdirSync(uploadsDir, { recursive: true });
     }
 
-    // Generate unique filename
-    const ext = path.extname(file.name) || ".jpg";
+    // Sanitize extension: strip path separators, allow only safe image extensions
+    const rawExt = path.extname(file.name).replace(/[^a-zA-Z0-9.]/g, "").toLowerCase();
+    const ALLOWED_EXT = new Set([".jpg", ".jpeg", ".png", ".gif", ".webp", ".avif", ".svg"]);
+    const ext = ALLOWED_EXT.has(rawExt) ? rawExt : ".jpg";
     const filename = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}${ext}`;
+
+    // Verify resolved path stays within uploads directory
     const filePath = path.join(uploadsDir, filename);
+    if (!filePath.startsWith(uploadsDir)) {
+      return NextResponse.json({ error: "Invalid filename" }, { status: 400 });
+    }
 
     // Write file to disk
     const buffer = Buffer.from(await file.arrayBuffer());

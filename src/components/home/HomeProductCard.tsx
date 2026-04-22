@@ -38,7 +38,7 @@ export default function HomeProductCard({ product }: HomeProductCardProps) {
       href={`/catalog/product/${product.slug}`}
       className="product-card group"
     >
-      <div className="product-image">
+      <div className={`product-image${imageSrc.includes("avito") ? " avito-badge" : ""}`}>
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
           src={imageSrc}
@@ -46,7 +46,7 @@ export default function HomeProductCard({ product }: HomeProductCardProps) {
           className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
           onError={() => setImageError(true)}
         />
-        {/* Favorites button */}
+        {/* Favorites button */}}
         <button
           onClick={(e) => {
             e.preventDefault();

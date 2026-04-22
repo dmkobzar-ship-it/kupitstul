@@ -112,6 +112,37 @@ export async function GET(request: NextRequest) {
     return NextResponse.json(result);
   }
 
+  // ── Шаг 4: Получить список чатов бота (botapi.max.ru) ─────────────────
+  if (step === "chats") {
+    const token = process.env.MAX_BOT_TOKEN;
+    if (!token) {
+      return NextResponse.json({ error: "MAX_BOT_TOKEN не задан" });
+    }
+    try {
+      const res = await fetch(
+        `https://botapi.max.ru/chats?access_token=${token}`,
+      );
+      const data = await res.json();
+      const chats: any[] = data?.chats || [];
+      result.chats = data;
+      if (chats.length === 0) {
+        result.hint =
+          "Бот не добавлен ни в одну группу. Создайте группу в MAX, добавьте бота 'КупитьСтул Заказы', дайте ему права администратора, напишите любое сообщение в группе и повторите запрос.";
+      } else {
+        result.chat_ids = chats.map((c: any) => ({
+          chat_id: c.chat_id,
+          title: c.title,
+          type: c.type,
+        }));
+        result.next =
+          "Скопируйте нужный chat_id и добавьте MAX_GROUP_CHAT_ID=<chat_id> в .env.local";
+      }
+    } catch (err: any) {
+      result.error = err?.message;
+    }
+    return NextResponse.json(result);
+  }
+
   // ── Статус ─────────────────────────────────────────────────────────────
   result.steps = {
     "1_check_token": "GET /api/test/max?step=me — проверить токен бота",
@@ -119,6 +150,8 @@ export async function GET(request: NextRequest) {
       "GET /api/test/max?step=updates — найти ваш user_id (после отправки любого сообщения боту)",
     "3_send_test":
       "GET /api/test/max?step=send — отправить тестовое уведомление",
+    "4_get_chats":
+      "GET /api/test/max?step=chats — найти chat_id группы (после добавления бота в группу)",
   };
   return NextResponse.json(result);
 }

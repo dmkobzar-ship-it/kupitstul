@@ -4,9 +4,9 @@ import "./globals.css";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
 import RevealAnimations from "@/components/layout/RevealAnimations";
-import FeedbackWidget from "@/components/dev/FeedbackWidget";
 import { CartProvider } from "@/components/cart/CartProvider";
 import { FavoritesProvider } from "@/components/cart/FavoritesProvider";
+import FeedbackWidget from "@/components/dev/FeedbackWidget";
 
 const inter = Inter({
   subsets: ["latin", "cyrillic"],
@@ -139,20 +139,21 @@ export default function RootLayout({
             <Header />
             <main className="min-h-screen">{children}</main>
             <Footer />
-            <FeedbackWidget />
+            {process.env.NODE_ENV === "development" && <FeedbackWidget />}
             <RevealAnimations />
             {/* Онлайн-чат виджет */}
             <script
               src="/chat-widget.js"
               data-ws={
                 process.env.NEXT_PUBLIC_CHAT_WS_URL ||
-                "wss://kupitstul.ru/ws/chat"
+                (process.env.NODE_ENV === "development"
+                  ? "ws://localhost:3002/ws/chat"
+                  : "wss://kupitstul.ru/ws/chat")
               }
               data-color="#2563eb"
               data-title="Онлайн-консультант"
               data-subtitle="Обычно отвечаем в течение 5 минут"
               data-greeting="Здравствуйте! Чем могу помочь? Напишите ваш вопрос, и мы ответим как можно скорее."
-              defer
             />
           </FavoritesProvider>
         </CartProvider>

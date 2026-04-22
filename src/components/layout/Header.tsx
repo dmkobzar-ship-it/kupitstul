@@ -20,20 +20,19 @@ import { useFavorites } from "@/components/cart/FavoritesProvider";
 // Мега-меню категорий — реальные категории из импорта (захардкожены для клиентского компонента)
 const catalogMenu = {
   "По типу": [
-    { name: "Барные стулья", href: "/catalog/barnye-stulya", count: 1461 },
-    { name: "Стулья", href: "/catalog/stulya", count: 301 },
-    { name: "Кресла", href: "/catalog/kresla", count: 245 },
-    { name: "Столы", href: "/catalog/stoly", count: 184 },
-    { name: "Кровати", href: "/catalog/krovati", count: 172 },
-    { name: "Пуфы и банкетки", href: "/catalog/pufy", count: 158 },
+    { name: "Стулья", href: "/catalog/stulya", count: 1571 },
+    { name: "Кресла", href: "/catalog/kresla", count: 285 },
+    { name: "Столы", href: "/catalog/stoly", count: 730 },
+    { name: "Кровати", href: "/catalog/krovati", count: 186 },
+    { name: "Пуфы и банкетки", href: "/catalog/pufy", count: 178 },
     { name: "Комоды", href: "/catalog/komody", count: 45 },
-    { name: "Стеллажи", href: "/catalog/stellazhi", count: 40 },
+    { name: "Стеллажи", href: "/catalog/stellazhi", count: 55 },
     {
       name: "Компьютерные кресла",
       href: "/catalog/kompyuternye-kresla",
-      count: 36,
+      count: 354,
     },
-    { name: "Диваны", href: "/catalog/divany", count: 30 },
+    { name: "Диваны", href: "/catalog/divany", count: 38 },
   ],
   "По комнате": [
     { name: "Для кухни", href: "/catalog?room=kitchen" },
@@ -63,7 +62,7 @@ export default function Header() {
 
   // Category slug to Russian name mapping
   const categoryNamesMap: Record<string, string> = {
-    "barnye-stulya": "Барные стулья",
+    "barnye-stulya": "Стулья",
     stulya: "Стулья",
     kresla: "Кресла",
     stoly: "Столы",
@@ -164,12 +163,6 @@ export default function Header() {
             <span className="text-gray-400">Ежедневно 9:00 — 21:00</span>
           </div>
           <div className="flex items-center gap-6">
-            <Link
-              href="/admin"
-              className="bg-[var(--color-accent)] hover:bg-[var(--color-accent-hover)] px-3 py-1 rounded text-white font-medium transition-colors"
-            >
-              Админка
-            </Link>
             <Link
               href="/dostavka"
               className="hover:text-[var(--color-accent)] transition-colors"
@@ -404,7 +397,7 @@ export default function Header() {
                   </p>
                   <div className="flex flex-wrap gap-2">
                     {[
-                      { label: "Барные стулья", slug: "barnye-stulya" },
+                      { label: "Стулья", slug: "stulya" },
                       { label: "Офисные кресла", slug: "kompyuternye-kresla" },
                       { label: "Обеденные столы", slug: "stoly" },
                       { label: "Комоды", slug: "komody" },

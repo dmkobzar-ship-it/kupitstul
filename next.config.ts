@@ -1,10 +1,16 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  // Required for Docker standalone build
+  output: "standalone",
+
+  // Disable X-Powered-By header (info disclosure)
+  poweredByHeader: false,
+
   typescript: {
     ignoreBuildErrors: true, // pre-existing TS errors from lowdb/react-dropzone
   },
-  serverExternalPackages: ["lowdb"],
+  serverExternalPackages: ["lowdb", "sharp"],
 
   // Compress all responses (gzip/brotli)
   compress: true,
@@ -20,6 +26,15 @@ const nextConfig: NextConfig = {
       {
         source: "/(.*)",
         headers: [
+          {
+            key: "Strict-Transport-Security",
+            value: "max-age=31536000; includeSubDomains; preload",
+          },
+          {
+            key: "Content-Security-Policy",
+            value:
+              "default-src 'self'; img-src 'self' data: https: http:; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; font-src 'self' data:; connect-src 'self' https: http: ws: wss:; object-src 'none'; frame-ancestors 'none'; base-uri 'self'; form-action 'self';",
+          },
           { key: "X-Frame-Options", value: "SAMEORIGIN" },
           { key: "X-Content-Type-Options", value: "nosniff" },
           { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
@@ -49,6 +64,16 @@ const nextConfig: NextConfig = {
             value: "public, max-age=604800, stale-while-revalidate=86400",
           },
         ],
+      },
+    ];
+  },
+
+  async redirects() {
+    return [
+      {
+        source: "/catalog/barnye-stulya",
+        destination: "/catalog/stulya",
+        permanent: true,
       },
     ];
   },

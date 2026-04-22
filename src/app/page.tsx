@@ -40,9 +40,12 @@ const getPopularProducts = () => {
   const cats = ["stulya", "barnye-stulya", "kresla", "stoly"];
 
   // Берём по 2 случайных товара из каждой категории
+  // Исключаем товары со слагами содержащими кириллицу — они возвращают 404
+  const ASCII_SLUG = /^[a-z0-9_-]+$/;
   cats.forEach((cat) => {
     const catProducts = allProducts.filter(
-      (p) => p.category === cat && p.images.length > 0,
+      (p) =>
+        p.category === cat && p.images.length > 0 && ASCII_SLUG.test(p.slug),
     );
     // Перемешиваем Fisher-Yates
     for (let i = catProducts.length - 1; i > 0; i--) {

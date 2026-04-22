@@ -10,13 +10,24 @@ import * as path from "path";
 export type { Product, ImportedCategory } from "@/types/product";
 import type { Product, ImportedCategory } from "@/types/product";
 
-// Read from JSON file at server runtime — NOT cached at module level
-// Each call reads fresh from disk so admin edits appear immediately
+// Read from JSON file at server runtime — cached for 60 seconds
+// Admin edits appear within a minute (no full rebuild needed)
+let _cache: { products: Product[]; categories: ImportedCategory[] } | null =
+  null;
+let _cacheTime = 0;
+const CACHE_TTL_MS = 60_000; // 60 seconds
+
 function loadData(): { products: Product[]; categories: ImportedCategory[] } {
+  const now = Date.now();
+  if (_cache && now - _cacheTime < CACHE_TTL_MS) {
+    return _cache;
+  }
   try {
     const jsonPath = path.join(process.cwd(), "src", "data", "products.json");
     const raw = fs.readFileSync(jsonPath, "utf-8");
-    return JSON.parse(raw);
+    _cache = JSON.parse(raw);
+    _cacheTime = now;
+    return _cache!;
   } catch (e) {
     console.error("[importedProducts] Failed to load products.json:", e);
     return { products: [], categories: [] };
@@ -30,24 +41,35 @@ export function getImportedProducts(): Product[] {
 
 export function getImportedCategories(): ImportedCategory[] {
   const cats = loadData().categories;
-  // Порядок: Стулья первые, Барные стулья вторые, остальные как есть
-  const order: Record<string, number> = { stulya: 0, "barnye-stulya": 1 };
-  return [...cats].sort((a, b) => {
-    const oa = order[a.slug] ?? 100;
-    const ob = order[b.slug] ?? 100;
-    if (oa !== ob) return oa - ob;
-    return 0; // сохраняем исходный порядок для остальных
+  // Объединяем barnye-stulya в stulya — показываем одну категорию «Стулья»
+  const stulyaCat = cats.find((c) => c.slug === "stulya");
+  const barnyeCat = cats.find((c) => c.slug === "barnye-stulya");
+  const merged = cats
+    .filter((c) => c.slug !== "barnye-stulya")
+    .map((c) => {
+      if (c.slug === "stulya" && barnyeCat) {
+        return { ...c, count: c.count + barnyeCat.count };
+      }
+      return c;
+    });
+  // Стулья первые, остальные как есть
+  return [...merged].sort((a, b) => {
+    if (a.slug === "stulya") return -1;
+    if (b.slug === "stulya") return 1;
+    return 0;
   });
 }
 
 // Хелперы для работы с данными
 export function getProductsByCategory(category: string): Product[] {
-  let products = getImportedProducts().filter((p) => p.category === category);
-  // В категории «Барные стулья» показываем только товары со словом «барн» в названии
-  if (category === "barnye-stulya") {
-    products = products.filter((p) => /барн/i.test(p.name));
+  const all = getImportedProducts();
+  // В категории «Стулья» показываем все стулья включая барные
+  if (category === "stulya") {
+    return all.filter(
+      (p) => p.category === "stulya" || p.category === "barnye-stulya",
+    );
   }
-  return products;
+  return all.filter((p) => p.category === category);
 }
 
 export function getProductBySlug(slug: string): Product | undefined {

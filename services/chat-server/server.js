@@ -17,7 +17,9 @@
  *                          [Telegram Bot] (notifications)
  */
 
-require("dotenv").config();
+require("dotenv").config({
+  path: require("path").resolve(__dirname, "../../.env.local"),
+});
 
 const http = require("http");
 const express = require("express");
@@ -40,6 +42,7 @@ const CONFIG = {
   max: {
     botToken: process.env.MAX_BOT_TOKEN || "",
     webhookUrl: process.env.MAX_WEBHOOK_URL || "",
+    groupChatId: process.env.MAX_GROUP_CHAT_ID || "", // ID группы заказов в MAX
     apiBase: "https://botapi.max.ru",
   },
   telegram: {
@@ -56,20 +59,34 @@ const CONFIG = {
 
 // ─── Database Pool ──────────────────────────────────────────
 
-let pool;
+let pool = null;
+let dbAvailable = false;
+
+// In-memory fallback when MySQL is unavailable
+const memSessions = new Map(); // sessionId → { max_chat_id, visitor_name }
+const memMessages = new Map(); // sessionId → [{sender, body, created_at}]
 
 async function initDB() {
-  pool = mysql.createPool({
-    ...CONFIG.db,
-    waitForConnections: true,
-    connectionLimit: 10,
-    queueLimit: 0,
-  });
-
-  // Test connection
-  const conn = await pool.getConnection();
-  console.log("✅ MySQL connected");
-  conn.release();
+  try {
+    pool = mysql.createPool({
+      ...CONFIG.db,
+      waitForConnections: true,
+      connectionLimit: 10,
+      queueLimit: 0,
+      connectTimeout: 5000,
+    });
+    const conn = await pool.getConnection();
+    console.log("✅ MySQL connected");
+    conn.release();
+    dbAvailable = true;
+  } catch (err) {
+    console.warn(
+      "⚠️  MySQL недоступен — работаем в режиме in-memory (история не сохраняется):",
+      err.message,
+    );
+    pool = null;
+    dbAvailable = false;
+  }
 }
 
 // ─── Session Store ──────────────────────────────────────────
@@ -88,14 +105,45 @@ app.get("/health", (req, res) => {
   res.json({ status: "ok", sessions: sessions.size, uptime: process.uptime() });
 });
 
+// Test MAX relay endpoint
+app.get("/test-max", async (req, res) => {
+  if (!CONFIG.max.botToken || !CONFIG.max.groupChatId) {
+    return res.json({
+      ok: false,
+      error: "MAX_BOT_TOKEN или MAX_GROUP_CHAT_ID не заданы",
+    });
+  }
+  try {
+    await axios.post(
+      `${CONFIG.max.apiBase}/messages`,
+      { text: "🧪 Тест чат-сервера: relay работает!" },
+      {
+        params: {
+          access_token: CONFIG.max.botToken,
+          chat_id: CONFIG.max.groupChatId,
+        },
+      },
+    );
+    res.json({
+      ok: true,
+      message: "Тестовое сообщение отправлено в MAX группу",
+      chat_id: CONFIG.max.groupChatId,
+    });
+  } catch (err) {
+    res.json({ ok: false, error: err.response?.data || err.message });
+  }
+});
+
 // CSRF token proxy (optional)
 app.get("/api/chat/sessions", async (req, res) => {
   try {
     const sessionId = uuidv4();
-    await pool.execute(
-      "INSERT INTO chat_sessions (id, ip_address, user_agent) VALUES (?, ?, ?)",
-      [sessionId, req.ip, req.headers["user-agent"] || ""],
-    );
+    if (dbAvailable) {
+      await pool.execute(
+        "INSERT INTO chat_sessions (id, ip_address, user_agent) VALUES (?, ?, ?)",
+        [sessionId, req.ip, req.headers["user-agent"] || ""],
+      );
+    }
     res.json({ session_id: sessionId });
   } catch (err) {
     console.error("Session create error:", err);
@@ -106,10 +154,15 @@ app.get("/api/chat/sessions", async (req, res) => {
 // Get chat history for a session
 app.get("/api/chat/history/:sessionId", async (req, res) => {
   try {
-    const [rows] = await pool.execute(
-      "SELECT sender, body, created_at FROM chat_messages WHERE session_id = ? ORDER BY created_at ASC LIMIT 200",
-      [req.params.sessionId],
-    );
+    let rows = [];
+    if (dbAvailable) {
+      [rows] = await pool.execute(
+        "SELECT sender, body, created_at FROM chat_messages WHERE session_id = ? ORDER BY created_at ASC LIMIT 200",
+        [req.params.sessionId],
+      );
+    } else {
+      rows = (memMessages.get(req.params.sessionId) || []).slice(-200);
+    }
     res.json({ messages: rows });
   } catch (err) {
     console.error("History error:", err);
@@ -176,6 +229,9 @@ const wss = new WebSocketServer({
   maxPayload: 16 * 1024, // 16KB max message
 });
 
+// Suppress unhandled error when underlying HTTP server fails (e.g. EADDRINUSE)
+wss.on("error", () => {});
+
 wss.on("connection", (ws, req) => {
   const origin = req.headers.origin || "";
   // Basic origin check
@@ -190,10 +246,10 @@ wss.on("connection", (ws, req) => {
   }
 
   let sessionId = null;
-  let isAlive = true;
+  ws.isAlive = true; // инициализируем свойство объекта для heartbeat
 
   ws.on("pong", () => {
-    isAlive = true;
+    ws.isAlive = true; // сбрасываем свойство объекта, а не локальную переменную
   });
 
   ws.on("message", async (raw) => {
@@ -228,24 +284,38 @@ wss.on("connection", (ws, req) => {
             req.socket.remoteAddress ||
             "";
 
-          await pool.execute(
-            `INSERT INTO chat_sessions (id, visitor_name, visitor_page, ip_address, user_agent)
-             VALUES (?, ?, ?, ?, ?)
-             ON DUPLICATE KEY UPDATE visitor_name = VALUES(visitor_name), visitor_page = VALUES(visitor_page), updated_at = NOW()`,
-            [
-              sessionId,
-              visitorName,
-              visitorPage,
-              ip,
-              req.headers["user-agent"] || "",
-            ],
-          );
+          if (dbAvailable) {
+            await pool.execute(
+              `INSERT INTO chat_sessions (id, visitor_name, visitor_page, ip_address, user_agent)
+               VALUES (?, ?, ?, ?, ?)
+               ON DUPLICATE KEY UPDATE visitor_name = VALUES(visitor_name), visitor_page = VALUES(visitor_page), updated_at = NOW()`,
+              [
+                sessionId,
+                visitorName,
+                visitorPage,
+                ip,
+                req.headers["user-agent"] || "",
+              ],
+            );
+          } else {
+            const existing = memSessions.get(sessionId) || {};
+            memSessions.set(sessionId, {
+              ...existing,
+              visitor_name: visitorName,
+              visitor_page: visitorPage,
+            });
+          }
 
           // Send history
-          const [history] = await pool.execute(
-            "SELECT sender, body, created_at FROM chat_messages WHERE session_id = ? ORDER BY created_at ASC LIMIT 200",
-            [sessionId],
-          );
+          let history = [];
+          if (dbAvailable) {
+            [history] = await pool.execute(
+              "SELECT sender, body, created_at FROM chat_messages WHERE session_id = ? ORDER BY created_at ASC LIMIT 200",
+              [sessionId],
+            );
+          } else {
+            history = (memMessages.get(sessionId) || []).slice(-200);
+          }
 
           ws.send(
             JSON.stringify({
@@ -285,11 +355,18 @@ wss.on("connection", (ws, req) => {
           await relayToMAX(sessionId, body, data.name || "Посетитель");
 
           // Notify Telegram (first message only)
-          const [countRows] = await pool.execute(
-            "SELECT COUNT(*) as cnt FROM chat_messages WHERE session_id = ? AND sender = ?",
-            [sessionId, "visitor"],
-          );
-          const msgCount = countRows[0]?.cnt || 0;
+          let msgCount = 0;
+          if (dbAvailable) {
+            const [countRows] = await pool.execute(
+              "SELECT COUNT(*) as cnt FROM chat_messages WHERE session_id = ? AND sender = ?",
+              [sessionId, "visitor"],
+            );
+            msgCount = countRows[0]?.cnt || 0;
+          } else {
+            msgCount = (memMessages.get(sessionId) || []).filter(
+              (m) => m.sender === "visitor",
+            ).length;
+          }
 
           if (msgCount <= 1) {
             await notifyTelegramNewChat(
@@ -356,10 +433,17 @@ wss.on("close", () => clearInterval(heartbeat));
 // ─── Helper Functions ───────────────────────────────────────
 
 async function saveMessage(sessionId, sender, body) {
-  await pool.execute(
-    "INSERT INTO chat_messages (session_id, sender, body) VALUES (?, ?, ?)",
-    [sessionId, sender, body],
-  );
+  if (dbAvailable) {
+    await pool.execute(
+      "INSERT INTO chat_messages (session_id, sender, body) VALUES (?, ?, ?)",
+      [sessionId, sender, body],
+    );
+  } else {
+    if (!memMessages.has(sessionId)) memMessages.set(sessionId, []);
+    memMessages
+      .get(sessionId)
+      .push({ sender, body, created_at: new Date().toISOString() });
+  }
 }
 
 function broadcastToSession(sessionId, data, exclude = null) {
@@ -378,57 +462,63 @@ async function relayToMAX(sessionId, text, visitorName) {
   if (!CONFIG.max.botToken) return;
 
   try {
-    // Get or create MAX chat for this session
-    let [rows] = await pool.execute(
-      "SELECT max_chat_id FROM chat_sessions WHERE id = ?",
-      [sessionId],
-    );
-
-    let maxChatId = rows[0]?.max_chat_id;
+    let maxChatId = CONFIG.max.groupChatId || null;
 
     if (!maxChatId) {
-      // Start a new chat with the operator
-      // We need the operator's MAX user ID to create a chat
-      // For now, send to the bot's own chat and track it
-      // The operator should /start the bot first in MAX
-
-      // Get bot info to find chats
-      const infoResp = await axios.get(`${CONFIG.max.apiBase}/me`, {
-        params: { access_token: CONFIG.max.botToken },
-      });
-      console.log("MAX bot info:", infoResp.data?.name || "unknown");
-
-      // Get existing chats
-      const chatsResp = await axios.get(`${CONFIG.max.apiBase}/chats`, {
-        params: { access_token: CONFIG.max.botToken },
-      });
-
-      const chats = chatsResp.data?.chats || [];
-      if (chats.length > 0) {
-        // Use the first available chat (operator should have messaged the bot)
-        maxChatId = chats[0].chat_id;
-
-        // Save mapping
-        await pool.execute(
-          "UPDATE chat_sessions SET max_chat_id = ? WHERE id = ?",
-          [maxChatId, sessionId],
+      // Fallback: get or create per-session MAX chat
+      if (dbAvailable) {
+        let [rows] = await pool.execute(
+          "SELECT max_chat_id FROM chat_sessions WHERE id = ?",
+          [sessionId],
         );
-        maxChatToSession.set(maxChatId, sessionId);
+        maxChatId = rows[0]?.max_chat_id;
       } else {
-        console.log(
-          "No MAX chats available. Operator needs to /start the bot.",
-        );
-        return;
+        maxChatId = memSessions.get(sessionId)?.max_chat_id;
+      }
+
+      if (!maxChatId) {
+        const chatsResp = await axios.get(`${CONFIG.max.apiBase}/chats`, {
+          params: { access_token: CONFIG.max.botToken },
+        });
+        const chats = chatsResp.data?.chats || [];
+        if (chats.length > 0) {
+          maxChatId = chats[0].chat_id;
+          if (dbAvailable) {
+            await pool.execute(
+              "UPDATE chat_sessions SET max_chat_id = ? WHERE id = ?",
+              [maxChatId, sessionId],
+            );
+          } else {
+            const s = memSessions.get(sessionId) || {};
+            s.max_chat_id = maxChatId;
+            memSessions.set(sessionId, s);
+          }
+        } else {
+          console.log("MAX_GROUP_CHAT_ID не настроен и нет доступных чатов.");
+          return;
+        }
       }
     }
 
-    // Ensure mapping exists
+    // Ensure session→chat mapping exists
     if (!maxChatToSession.has(maxChatId)) {
       maxChatToSession.set(maxChatId, sessionId);
     }
 
-    // Send message to MAX
-    const msgText = `💬 ${visitorName}:\n${text}`;
+    // Format: include session short-id so operator knows which chat
+    const shortId = sessionId.substring(0, 8);
+    let visitorPage = "";
+    if (dbAvailable) {
+      const [rows] = await pool.execute(
+        "SELECT visitor_page FROM chat_sessions WHERE id = ?",
+        [sessionId],
+      );
+      visitorPage = rows[0]?.visitor_page || "";
+    } else {
+      visitorPage = memSessions.get(sessionId)?.visitor_page || "";
+    }
+    const pageLine = visitorPage ? `\n🔗 ${visitorPage}` : "";
+    const msgText = `💬 [${shortId}] Клиент:${pageLine}\n${text}`;
     await axios.post(
       `${CONFIG.max.apiBase}/messages`,
       { text: msgText },
@@ -440,7 +530,7 @@ async function relayToMAX(sessionId, text, visitorName) {
       },
     );
 
-    console.log(`→ MAX: ${msgText.slice(0, 80)}`);
+    console.log(`→ MAX [${maxChatId}]: ${msgText.slice(0, 80)}`);
   } catch (err) {
     console.error("MAX relay error:", err.response?.data || err.message);
   }
@@ -478,11 +568,81 @@ function sanitize(str, maxLen = 255) {
     .slice(0, maxLen);
 }
 
+// ─── MAX Polling (получение ответов оператора из группы) ────
+// Используется когда MAX_WEBHOOK_URL не задан (локальная разработка).
+// Каждые 3 секунды запрашиваем /updates из группового чата.
+
+let maxLastUpdateId = null; // маркер последнего полученного update
+
+async function pollMAX() {
+  if (!CONFIG.max.botToken || !CONFIG.max.groupChatId) return;
+  if (CONFIG.max.webhookUrl) return;
+
+  try {
+    const resp = await axios.get(`${CONFIG.max.apiBase}/messages`, {
+      params: {
+        access_token: CONFIG.max.botToken,
+        chat_id: CONFIG.max.groupChatId,
+        count: 20,
+      },
+    });
+    // MAX возвращает DESC (новые первые) — разворачиваем в хронологический порядок
+    const msgs = (resp.data?.messages || []).slice().reverse();
+
+    for (const msg of msgs) {
+      const ts = msg.timestamp;
+
+      // Пропускаем сообщения не новее нашего маркера
+      if (maxLastUpdateId !== null && ts < maxLastUpdateId) continue;
+
+      // Двигаем маркер вперёд
+      if (!maxLastUpdateId || ts >= maxLastUpdateId) {
+        maxLastUpdateId = ts + 1;
+      }
+
+      // Игнорируем сообщения от бота (наши исходящие)
+      if (msg.sender?.is_bot) continue;
+      const text = msg.body?.text || "";
+      if (!text) continue;
+
+      // Найти сессию по этому групповому чату
+      const chatId = String(CONFIG.max.groupChatId);
+      const sessionId = maxChatToSession.get(chatId);
+      if (!sessionId) {
+        console.log(`← MAX [нет сессии]: ${text.slice(0, 60)}`);
+        continue;
+      }
+
+      console.log(
+        `← MAX ответ [${sessionId.slice(0, 8)}]: ${text.slice(0, 80)}`,
+      );
+      await saveMessage(sessionId, "operator", text);
+      broadcastToSession(sessionId, {
+        type: "message",
+        sender: "operator",
+        body: text,
+        timestamp: new Date().toISOString(),
+      });
+    }
+  } catch (err) {
+    if (err.response?.status !== 404) {
+      console.error(
+        "MAX poll error:",
+        err.response?.data?.message || err.message,
+      );
+    }
+  }
+}
+
 // ─── MAX Webhook Registration ───────────────────────────────
 
 async function registerMAXWebhook() {
   if (!CONFIG.max.botToken || !CONFIG.max.webhookUrl) {
-    console.log("⚠️  MAX Bot not configured, skipping webhook registration");
+    if (!CONFIG.max.webhookUrl) {
+      console.log(
+        "ℹ️  MAX_WEBHOOK_URL не задан, webhook не регистрируется (работаем через group chat)",
+      );
+    }
     return;
   }
 
@@ -510,18 +670,64 @@ async function main() {
   await registerMAXWebhook();
 
   // Load existing session-MAX mappings from DB
-  try {
-    const [rows] = await pool.execute(
-      "SELECT id, max_chat_id FROM chat_sessions WHERE max_chat_id IS NOT NULL AND status = ?",
-      ["active"],
-    );
-    for (const row of rows) {
-      maxChatToSession.set(row.max_chat_id, row.id);
+  if (dbAvailable) {
+    try {
+      const [rows] = await pool.execute(
+        "SELECT id, max_chat_id FROM chat_sessions WHERE max_chat_id IS NOT NULL AND status = ?",
+        ["active"],
+      );
+      for (const row of rows) {
+        maxChatToSession.set(row.max_chat_id, row.id);
+      }
+      console.log(`📋 Loaded ${rows.length} active MAX chat mappings`);
+    } catch (err) {
+      console.error("Failed to load chat mappings:", err.message);
     }
-    console.log(`📋 Loaded ${rows.length} active MAX chat mappings`);
-  } catch (err) {
-    console.error("Failed to load chat mappings:", err.message);
   }
+
+  let retried = false;
+
+  server.on("error", (err) => {
+    if (err.code === "EADDRINUSE" && !retried) {
+      retried = true;
+      console.warn(`⚡ Порт ${CONFIG.port} занят — пытаюсь освободить...`);
+      try {
+        const { execSync } = require("child_process");
+        const out = execSync("netstat -ano", { encoding: "utf8" });
+        const pids = new Set();
+        for (const line of out.trim().split("\n")) {
+          const parts = line.trim().split(/\s+/);
+          const localAddr = parts[1] || "";
+          const pid = parts[parts.length - 1];
+          if (
+            (localAddr === `0.0.0.0:${CONFIG.port}` ||
+              localAddr === `[::]:${CONFIG.port}`) &&
+            /^\d+$/.test(pid) &&
+            pid !== "0"
+          ) {
+            pids.add(pid);
+          }
+        }
+        for (const pid of pids) {
+          try {
+            execSync(`taskkill /F /PID ${pid}`, { stdio: "pipe" });
+            console.log(`  ✅ Убит PID ${pid}`);
+          } catch {
+            /* уже завершён */
+          }
+        }
+      } catch (e) {
+        console.error("  Не удалось освободить порт:", e.message);
+      }
+      // Повторяем listen через 800мс
+      setTimeout(() => {
+        server.listen(CONFIG.port, "0.0.0.0");
+      }, 800);
+    } else {
+      console.error("❌ Server error:", err.message);
+      process.exit(1);
+    }
+  });
 
   server.listen(CONFIG.port, "0.0.0.0", () => {
     console.log(`✅ Chat server running on port ${CONFIG.port}`);
@@ -530,7 +736,41 @@ async function main() {
     console.log(
       `   Webhook:   http://localhost:${CONFIG.port}/api/chat/webhook`,
     );
+    console.log(
+      `   MAX token: ${CONFIG.max.botToken ? "✅ задан" : "❌ не задан"}`,
+    );
+    console.log(`   MAX group: ${CONFIG.max.groupChatId || "❌ не задан"}`);
+
+    // Запускаем polling MAX если webhook не настроен
+    if (
+      CONFIG.max.botToken &&
+      CONFIG.max.groupChatId &&
+      !CONFIG.max.webhookUrl
+    ) {
+      startMAXPolling();
+    }
   });
+}
+
+async function startMAXPolling() {
+  // Инициализируем маркер — берём timestamp последнего сообщения чтоб не читать старые
+  try {
+    const initResp = await axios.get(`${CONFIG.max.apiBase}/messages`, {
+      params: {
+        access_token: CONFIG.max.botToken,
+        chat_id: CONFIG.max.groupChatId,
+        count: 1,
+      },
+    });
+    const lastMsgs = initResp.data?.messages || [];
+    // MAX возвращает DESC (новые первые) — берём первый
+    maxLastUpdateId =
+      lastMsgs.length > 0 ? lastMsgs[0].timestamp + 1 : Date.now();
+  } catch {
+    maxLastUpdateId = Date.now();
+  }
+  console.log(`   MAX poll:  ✅ каждые 3с (маркер: ${maxLastUpdateId})`);
+  setInterval(pollMAX, 3000);
 }
 
 main().catch((err) => {

@@ -54,10 +54,11 @@
   let reconnectTimer = null;
   let reconnectDelay = 1000;
   let reconnectAttempts = 0;
-  const MAX_RECONNECT_ATTEMPTS = 5;
+  const MAX_RECONNECT_ATTEMPTS = 10;
   let typingTimer = null;
   let hasGreeted = false;
   let wsAvailable = true;
+  let pendingMessage = null; // очередь пока нет соединения
 
   // ─── Load State from localStorage ─────────────────────
 
@@ -116,9 +117,9 @@
         bottom: 24px;
         ${pos}: 24px;
         ${posOpp}: auto;
-        width: 60px;
-        height: 60px;
-        border-radius: 50%;
+        height: 48px;
+        padding: 0 18px 0 14px;
+        border-radius: 28px;
         background: ${CONF.color};
         border: none;
         cursor: pointer;
@@ -126,23 +127,30 @@
         z-index: 99999;
         display: flex;
         align-items: center;
-        justify-content: center;
+        gap: 8px;
         transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.3s;
         animation: ks-pulse 2s ease-in-out infinite;
+        white-space: nowrap;
       }
       #ks-chat-btn:hover {
-        transform: scale(1.1);
+        transform: scale(1.05);
         box-shadow: 0 6px 24px rgba(37, 99, 235, 0.5);
       }
       #ks-chat-btn.ks-open {
-        transform: rotate(90deg) scale(1);
         animation: none;
       }
       #ks-chat-btn svg {
-        width: 28px;
-        height: 28px;
+        width: 22px;
+        height: 22px;
         fill: #fff;
-        transition: transform 0.3s;
+        flex-shrink: 0;
+      }
+      #ks-chat-btn .ks-btn-label {
+        color: #fff;
+        font-size: 14px;
+        font-weight: 600;
+        font-family: inherit;
+        letter-spacing: 0.01em;
       }
       @keyframes ks-pulse {
         0%, 100% { box-shadow: 0 4px 16px rgba(37, 99, 235, 0.4); }
@@ -496,12 +504,15 @@
         #ks-chat-btn {
           bottom: 16px;
           ${pos}: 16px;
-          width: 54px;
-          height: 54px;
+          height: 44px;
+          padding: 0 14px 0 12px;
         }
         #ks-chat-btn svg {
-          width: 24px;
-          height: 24px;
+          width: 20px;
+          height: 20px;
+        }
+        #ks-chat-btn .ks-btn-label {
+          font-size: 13px;
         }
       }
     `;
@@ -536,8 +547,8 @@
     // Button
     const btn = document.createElement("button");
     btn.id = "ks-chat-btn";
-    btn.setAttribute("aria-label", "Открыть чат");
-    btn.innerHTML = ICONS.chat + '<span id="ks-chat-badge"></span>';
+    btn.setAttribute("aria-label", "Открыть чат в MAX");
+    btn.innerHTML = ICONS.chat + '<span class="ks-btn-label">чат в MAX</span><span id="ks-chat-badge"></span>';
     btn.onclick = toggleChat;
 
     // Window
@@ -571,44 +582,14 @@
     const body = document.getElementById("ks-chat-body");
     if (!body) return;
 
-    if (!visitorName && !sessionId) {
-      // Pre-chat form
-      body.innerHTML = `
-        <div class="ks-prechat">
-          <h4>👋 Добро пожаловать!</h4>
-          <p>${CONF.subtitle}</p>
-          <input type="text" id="ks-name-input" placeholder="Ваше имя" maxlength="100" autocomplete="name" />
-          <button id="ks-start-btn">Начать чат</button>
-        </div>
-      `;
-
-      const nameInput = document.getElementById("ks-name-input");
-      const startBtn = document.getElementById("ks-start-btn");
-
-      startBtn.onclick = () => {
-        const name = (nameInput.value || "").trim();
-        if (name.length < 1) {
-          nameInput.style.borderColor = "#ef4444";
-          nameInput.focus();
-          return;
-        }
-        visitorName = name;
-        sessionId = sessionId || uuid();
-        saveState();
-        renderChatView();
-        connectWS();
-      };
-
-      nameInput.onkeydown = (e) => {
-        if (e.key === "Enter") startBtn.click();
-        nameInput.style.borderColor = "#e2e8f0";
-      };
-
-      setTimeout(() => nameInput?.focus(), 300);
-    } else {
-      renderChatView();
-      connectWS();
+    // Автоматически создаём сессию без запроса имени
+    if (!sessionId) {
+      sessionId = uuid();
+      visitorName = "";
+      saveState();
     }
+    renderChatView();
+    connectWS();
   }
 
   function renderChatView() {
@@ -705,7 +686,22 @@
     if (!input) return;
 
     const text = input.value.trim();
-    if (!text || !isConnected) return;
+    if (!text) return;
+
+    if (!isConnected) {
+      // Сохранить и отправить после переподключения
+      pendingMessage = text;
+      input.value = "";
+      // Показать статус «отправляем...»
+      addMessage("visitor", text);
+      updateStatus(false);
+      // Попробовать переподключиться
+      wsAvailable = true;
+      reconnectAttempts = 0;
+      reconnectDelay = 1000;
+      connectWS();
+      return;
+    }
 
     ws.send(
       JSON.stringify({
@@ -759,6 +755,15 @@
           page: window.location.href,
         }),
       );
+
+      // Отправить ожидающее сообщение
+      if (pendingMessage) {
+        const msg = pendingMessage;
+        pendingMessage = null;
+        setTimeout(() => {
+          ws.send(JSON.stringify({ type: "message", body: msg, name: visitorName }));
+        }, 200);
+      }
     };
 
     ws.onmessage = (event) => {
@@ -833,7 +838,7 @@
     reconnectTimer = setTimeout(
       () => {
         reconnectTimer = null;
-        if (sessionId && isOpen && wsAvailable) {
+        if (sessionId && wsAvailable) {
           connectWS();
         }
       },
@@ -852,14 +857,17 @@
     if (isOpen) {
       win?.classList.add("ks-visible");
       btn?.classList.add("ks-open");
-      btn.innerHTML = ICONS.close + '<span id="ks-chat-badge"></span>';
+      btn.innerHTML = ICONS.close + '<span class="ks-btn-label">закрыть</span><span id="ks-chat-badge"></span>';
       unreadCount = 0;
       updateBadge();
+      // Сброс счётчика ошибок при каждом открытии
+      wsAvailable = true;
+      reconnectAttempts = 0;
       renderBody();
     } else {
       win?.classList.remove("ks-visible");
       btn?.classList.remove("ks-open");
-      btn.innerHTML = ICONS.chat + '<span id="ks-chat-badge"></span>';
+      btn.innerHTML = ICONS.chat + '<span class="ks-btn-label">чат в MAX</span><span id="ks-chat-badge"></span>';
     }
   }
 

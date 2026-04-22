@@ -40,10 +40,18 @@ export default function ProductGallery({
     return getPlaceholderUrl(index, size);
   };
 
+  // Proxy helper: routes Avito-hosted images through /api/img to hide the Avito watermark
+  const proxyImageUrl = (url: string): string => {
+    if (url.includes("avito.st")) {
+      return `/api/img?url=${encodeURIComponent(url)}`;
+    }
+    return url;
+  };
+
   // Массив изображений (минимум 1, максимум 10)
   const imageCount = Math.max(1, Math.min(images.length || 1, 10));
   const displayImages = Array.from({ length: imageCount }, (_, i) =>
-    getImageUrl(i)
+    proxyImageUrl(getImageUrl(i)),
   );
   const hasMultipleImages = displayImages.length > 1;
 
@@ -53,13 +61,13 @@ export default function ProductGallery({
 
   const goToPrev = useCallback(() => {
     setSelectedIndex((prev) =>
-      prev === 0 ? displayImages.length - 1 : prev - 1
+      prev === 0 ? displayImages.length - 1 : prev - 1,
     );
   }, [displayImages.length]);
 
   const goToNext = useCallback(() => {
     setSelectedIndex((prev) =>
-      prev === displayImages.length - 1 ? 0 : prev + 1
+      prev === displayImages.length - 1 ? 0 : prev + 1,
     );
   }, [displayImages.length]);
 
@@ -70,7 +78,7 @@ export default function ProductGallery({
       if (e.key === "ArrowRight") goToNext();
       if (e.key === "Escape") setIsZoomed(false);
     },
-    [goToPrev, goToNext]
+    [goToPrev, goToNext],
   );
 
   return (

@@ -185,7 +185,10 @@ export default function ProductCard({ product }: ProductCardProps) {
               style={{ transform: `translateX(-${currentImageIndex * 100}%)` }}
             >
               {images.map((imgUrl, index) => (
-                <div key={index} className="w-full h-full flex-shrink-0">
+                <div
+                  key={index}
+                  className={`relative w-full h-full flex-shrink-0${imgUrl.includes("avito") ? " avito-badge" : ""}`}
+                >
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img
                     src={imgUrl}
@@ -194,10 +197,13 @@ export default function ProductCard({ product }: ProductCardProps) {
                     onError={() => handleImageError(index)}
                     loading={index === 0 ? "eager" : "lazy"}
                   />
+                  {/* Плашка перекрывает логотип Авито */}
+                  <div className="absolute bottom-1.5 right-1.5 z-10 px-1.5 py-0.5 bg-white/90 backdrop-blur-sm rounded text-[10px] font-semibold text-gray-400 select-none pointer-events-none">
+                    kupitstul.ru
+                  </div>
                 </div>
               ))}
             </div>
-
             {/* Оверлей при наведении */}
             <div
               className={`absolute inset-0 bg-black/20 flex items-center justify-center transition-opacity duration-300 pointer-events-none ${

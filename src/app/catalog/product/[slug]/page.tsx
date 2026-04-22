@@ -73,6 +73,7 @@ export default async function ProductPage({ params }: ProductPageProps) {
 
   const categoryNames: Record<string, string> = {
     stulya: "Стулья",
+    "barnye-stulya": "Стулья",
     stoly: "Столы",
     kresla: "Кресла",
     divany: "Диваны",

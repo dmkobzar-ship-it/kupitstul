@@ -1,0 +1,783 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<yml_catalog date="2026-03-27T12:59">
+<shop>
+<name>Millargo</name>
+<company>ООО &quot;Милларго&quot;</company>
+<url>https://millargo.ru/</url>
+<platform>WordPress - YML for Yandex Market</platform>
+<version>6.9.4</version>
+<currencies>
+<currency id="RUB" rate="1"/>
+</currencies>
+<offers><offer id="36658" available="true">
+<currencyId>RUB</currencyId>
+<price>351000</price>
+<url>https://millargo.ru/product/set-flecto/</url>
+<delivery>false</delivery>
+</offer><offer id="36617" available="true">
+<currencyId>RUB</currencyId>
+<price>75000</price>
+<url>https://millargo.ru/product/table-flecto/</url>
+<delivery>false</delivery>
+</offer><offer id="36616" available="true">
+<currencyId>RUB</currencyId>
+<price>46000</price>
+<url>https://millargo.ru/product/pouf-flecto/</url>
+<delivery>false</delivery>
+</offer><offer id="36615" available="true">
+<currencyId>RUB</currencyId>
+<price>73000</price>
+<url>https://millargo.ru/product/the-flecto-chair/</url>
+<delivery>false</delivery>
+</offer><offer id="36614" available="true">
+<currencyId>RUB</currencyId>
+<price>45000</price>
+<url>https://millargo.ru/product/coffee-table-flecto/</url>
+<delivery>false</delivery>
+</offer><offer id="36613" available="true">
+<currencyId>RUB</currencyId>
+<price>55000</price>
+<url>https://millargo.ru/product/chair-flecto/</url>
+<delivery>false</delivery>
+</offer><offer id="36612" available="true">
+<currencyId>RUB</currencyId>
+<price>132000</price>
+<url>https://millargo.ru/product/the-flecto-sofa/</url>
+<delivery>false</delivery>
+</offer><offer id="36590" available="true">
+<currencyId>RUB</currencyId>
+<price>23900</price>
+<url>https://millargo.ru/product/chair-libero-american-walnut/</url>
+<delivery>false</delivery>
+</offer><offer id="36586" available="true">
+<currencyId>RUB</currencyId>
+<price>23900</price>
+<url>https://millargo.ru/product/chair-libero-dominican/</url>
+<delivery>false</delivery>
+<count>52</count>
+</offer><offer id="36488" available="true">
+<currencyId>RUB</currencyId>
+<price>28800</price>
+<url>https://millargo.ru/product/chair-riva-chocolate-metallic/</url>
+<delivery>false</delivery>
+</offer><offer id="36480" available="true">
+<currencyId>RUB</currencyId>
+<price>344100</price>
+<url>https://millargo.ru/product/tempo-indian-tree-set/</url>
+<delivery>false</delivery>
+</offer><offer id="36451" available="true">
+<currencyId>RUB</currencyId>
+<price>28800</price>
+<url>https://millargo.ru/product/chair-riva-indian-wood/</url>
+<delivery>false</delivery>
+</offer><offer id="36446" available="true">
+<currencyId>RUB</currencyId>
+<price>28800</price>
+<url>https://millargo.ru/product/chair-riva-dominicana/</url>
+<delivery>false</delivery>
+</offer><offer id="36445" available="true">
+<currencyId>RUB</currencyId>
+<price>23900</price>
+<url>https://millargo.ru/product/libero-chair/</url>
+<delivery>false</delivery>
+<count>47</count>
+</offer><offer id="36439" available="true">
+<currencyId>RUB</currencyId>
+<price>75000</price>
+<url>https://millargo.ru/product/стол-журнальный-темпо/</url>
+<delivery>false</delivery>
+</offer><offer id="36432" available="true">
+<currencyId>RUB</currencyId>
+<price>74000</price>
+<url>https://millargo.ru/product/tempo-indian-wood-chair/</url>
+<delivery>false</delivery>
+</offer><offer id="36423" available="true">
+<currencyId>RUB</currencyId>
+<price>121100</price>
+<url>https://millargo.ru/product/диван-темпо/</url>
+<delivery>false</delivery>
+</offer><offer id="33094" available="true">
+<currencyId>RUB</currencyId>
+<price>38500</price>
+<oldprice>74100</oldprice>
+<url>https://millargo.ru/product/table-primo-sicilia/</url>
+<delivery>false</delivery>
+<count>0</count>
+</offer><offer id="33086" available="true">
+<currencyId>RUB</currencyId>
+<price>38500</price>
+<oldprice>74100</oldprice>
+<url>https://millargo.ru/product/table-primo-american-nut/</url>
+<delivery>false</delivery>
+<count>1</count>
+</offer><offer id="33083" available="true">
+<currencyId>RUB</currencyId>
+<price>21500</price>
+<oldprice>39500</oldprice>
+<url>https://millargo.ru/product/armchair-primo-american-nut/</url>
+<delivery>false</delivery>
+<count>69</count>
+</offer><offer id="33080" available="true">
+<currencyId>RUB</currencyId>
+<price>21500</price>
+<oldprice>39500</oldprice>
+<url>https://millargo.ru/product/armchair-primo-sicilia/</url>
+<delivery>false</delivery>
+<count>0</count>
+</offer><offer id="33074" available="true">
+<currencyId>RUB</currencyId>
+<price>21500</price>
+<oldprice>39500</oldprice>
+<url>https://millargo.ru/product/armchair-primo-milk-way/</url>
+<delivery>false</delivery>
+<count>66</count>
+</offer><offer id="33071" available="true">
+<currencyId>RUB</currencyId>
+<price>29500</price>
+<oldprice>54900</oldprice>
+<url>https://millargo.ru/product/sofa-primo-american-nut/</url>
+<delivery>false</delivery>
+<count>1</count>
+</offer><offer id="33069" available="true">
+<currencyId>RUB</currencyId>
+<price>29500</price>
+<oldprice>54900</oldprice>
+<url>https://millargo.ru/product/sofa-primo-sicilia/</url>
+<delivery>false</delivery>
+<count>0</count>
+</offer><offer id="33063" available="true">
+<currencyId>RUB</currencyId>
+<price>29500</price>
+<oldprice>54900</oldprice>
+<url>https://millargo.ru/product/sofa-primo-milk-way/</url>
+<delivery>false</delivery>
+<count>0</count>
+</offer><offer id="33058" available="true">
+<currencyId>RUB</currencyId>
+<price>154000</price>
+<oldprice>287000</oldprice>
+<url>https://millargo.ru/product/set-primo-american-nut/</url>
+<delivery>false</delivery>
+<count>0</count>
+</offer><offer id="33050" available="true">
+<currencyId>RUB</currencyId>
+<price>162000</price>
+<oldprice>297400</oldprice>
+<url>https://millargo.ru/product/set-primo-sicilia/</url>
+<delivery>false</delivery>
+<count>0</count>
+</offer><offer id="33022" available="true">
+<currencyId>RUB</currencyId>
+<price>38700</price>
+<url>https://millargo.ru/product/table-lotus-d930-choco-metal/</url>
+<delivery>false</delivery>
+<count>12</count>
+</offer><offer id="33018" available="true">
+<currencyId>RUB</currencyId>
+<price>38700</price>
+<url>https://millargo.ru/product/table-lotus-d930-african-sunset/</url>
+<delivery>false</delivery>
+<count>2</count>
+</offer><offer id="33014" available="true">
+<currencyId>RUB</currencyId>
+<price>32500</price>
+<url>https://millargo.ru/product/table-lotus-d780-choco-metal/</url>
+<delivery>false</delivery>
+<count>6</count>
+</offer><offer id="33011" available="true">
+<currencyId>RUB</currencyId>
+<price>32500</price>
+<url>https://millargo.ru/product/table-lotus-d780-irbis/</url>
+<delivery>false</delivery>
+<count>6</count>
+</offer><offer id="33006" available="true">
+<currencyId>RUB</currencyId>
+<price>32500</price>
+<url>https://millargo.ru/product/table-lotus-d780-dominikana/</url>
+<delivery>false</delivery>
+<count>6</count>
+</offer><offer id="33004" available="true">
+<currencyId>RUB</currencyId>
+<price>26800</price>
+<url>https://millargo.ru/product/table-lotus-d630-choco-metal/</url>
+<delivery>false</delivery>
+<count>2</count>
+</offer><offer id="33002" available="true">
+<currencyId>RUB</currencyId>
+<price>26800</price>
+<url>https://millargo.ru/product/table-lotus-d630-irbis/</url>
+<delivery>false</delivery>
+<count>6</count>
+</offer><offer id="32997" available="true">
+<currencyId>RUB</currencyId>
+<price>26800</price>
+<url>https://millargo.ru/product/table-lotus-d630-dominikana/</url>
+<delivery>false</delivery>
+<count>10</count>
+</offer><offer id="32994" available="true">
+<currencyId>RUB</currencyId>
+<price>79800</price>
+<url>https://millargo.ru/product/table-lotus-1520-choco-metal/</url>
+<delivery>false</delivery>
+<count>11</count>
+</offer><offer id="32992" available="true">
+<currencyId>RUB</currencyId>
+<price>79800</price>
+<url>https://millargo.ru/product/table-lotus-1520-irbis/</url>
+<delivery>false</delivery>
+<count>11</count>
+</offer><offer id="32987" available="true">
+<currencyId>RUB</currencyId>
+<price>79800</price>
+<url>https://millargo.ru/product/table-lotus-1520-dominikana/</url>
+<delivery>false</delivery>
+<count>12</count>
+</offer><offer id="32984" available="true">
+<currencyId>RUB</currencyId>
+<price>25800</price>
+<url>https://millargo.ru/product/pouf-lotus-choco-metal/</url>
+<delivery>false</delivery>
+<count>2</count>
+</offer><offer id="32982" available="true">
+<currencyId>RUB</currencyId>
+<price>25800</price>
+<url>https://millargo.ru/product/pouf-lotus-irbis/</url>
+<delivery>false</delivery>
+<count>2</count>
+</offer><offer id="32976" available="true">
+<currencyId>RUB</currencyId>
+<price>25800</price>
+<url>https://millargo.ru/product/pouf-lotus-dominikana/</url>
+<delivery>false</delivery>
+<count>7</count>
+</offer><offer id="32973" available="true">
+<currencyId>RUB</currencyId>
+<price>59900</price>
+<url>https://millargo.ru/product/armchair-lotus-choco-metal/</url>
+<delivery>false</delivery>
+<count>10</count>
+</offer><offer id="32971" available="true">
+<currencyId>RUB</currencyId>
+<price>59900</price>
+<url>https://millargo.ru/product/armchair-lotus-irbis/</url>
+<delivery>false</delivery>
+<count>15</count>
+</offer><offer id="32966" available="true">
+<currencyId>RUB</currencyId>
+<price>59900</price>
+<url>https://millargo.ru/product/armchair-lotus-dominikana/</url>
+<delivery>false</delivery>
+<count>24</count>
+</offer><offer id="32963" available="true">
+<currencyId>RUB</currencyId>
+<price>95400</price>
+<url>https://millargo.ru/product/sofa-lotus-choco-metal/</url>
+<delivery>false</delivery>
+<count>5</count>
+</offer><offer id="32961" available="true">
+<currencyId>RUB</currencyId>
+<price>95400</price>
+<url>https://millargo.ru/product/sofa-lotus-irbis/</url>
+<delivery>false</delivery>
+<count>0</count>
+</offer><offer id="32956" available="true">
+<currencyId>RUB</currencyId>
+<price>95400</price>
+<url>https://millargo.ru/product/sofa-lotus-dominikana/</url>
+<delivery>false</delivery>
+<count>12</count>
+</offer><offer id="32953" available="true">
+<currencyId>RUB</currencyId>
+<price>300300</price>
+<url>https://millargo.ru/product/et-lotus-lounge-dominikana-choco-metal/</url>
+<delivery>false</delivery>
+<count>1</count>
+</offer><offer id="32951" available="true">
+<currencyId>RUB</currencyId>
+<price>300300</price>
+<url>https://millargo.ru/product/set-lotus-lounge-irbis/</url>
+<delivery>false</delivery>
+<count>1</count>
+</offer><offer id="32946" available="true">
+<currencyId>RUB</currencyId>
+<price>300300</price>
+<url>https://millargo.ru/product/set-lotus-lounge-dominikana/</url>
+<delivery>false</delivery>
+<count>1</count>
+</offer><offer id="32943" available="true">
+<currencyId>RUB</currencyId>
+<price>346600</price>
+<url>https://millargo.ru/product/set-lotus-choco-metal/</url>
+<delivery>false</delivery>
+<count>1</count>
+</offer><offer id="32941" available="true">
+<currencyId>RUB</currencyId>
+<price>346600</price>
+<url>https://millargo.ru/product/set-lotus-irbis/</url>
+<delivery>false</delivery>
+<count>1</count>
+</offer><offer id="32936" available="true">
+<currencyId>RUB</currencyId>
+<price>346600</price>
+<url>https://millargo.ru/product/set-lotus-dominikana/</url>
+<delivery>false</delivery>
+<count>1</count>
+</offer><offer id="32911" available="true">
+<currencyId>RUB</currencyId>
+<price>41700</price>
+<url>https://millargo.ru/product/armchair-quadro-black/</url>
+<delivery>false</delivery>
+<count>0</count>
+</offer><offer id="32909" available="true">
+<currencyId>RUB</currencyId>
+<price>41700</price>
+<url>https://millargo.ru/product/armchair-quadro-bog-oak/</url>
+<delivery>false</delivery>
+<count>0</count>
+</offer><offer id="32903" available="true">
+<currencyId>RUB</currencyId>
+<price>41700</price>
+<url>https://millargo.ru/product/armchair-quadro-light-gray/</url>
+<delivery>false</delivery>
+<count>0</count>
+</offer><offer id="32897" available="true">
+<currencyId>RUB</currencyId>
+<price>416200</price>
+<url>https://millargo.ru/product/set-quadro-2300-black/</url>
+<delivery>false</delivery>
+<count>0</count>
+</offer><offer id="32874" available="true">
+<currencyId>RUB</currencyId>
+<price>36000</price>
+<oldprice>63000</oldprice>
+<url>https://millargo.ru/product/table-titulo-choco-metal/</url>
+<delivery>false</delivery>
+<count>1</count>
+</offer><offer id="32872" available="true">
+<currencyId>RUB</currencyId>
+<price>36000</price>
+<oldprice>63000</oldprice>
+<url>https://millargo.ru/product/table-titulo-indian-tree/</url>
+<delivery>false</delivery>
+<count>1</count>
+</offer><offer id="32867" available="true">
+<currencyId>RUB</currencyId>
+<price>36000</price>
+<oldprice>63000</oldprice>
+<url>https://millargo.ru/product/table-titulo-dominikana/</url>
+<delivery>false</delivery>
+<count>0</count>
+</offer><offer id="32864" available="true">
+<currencyId>RUB</currencyId>
+<price>25500</price>
+<oldprice>45500</oldprice>
+<url>https://millargo.ru/product/armchair-titulo-choco-metal/</url>
+<delivery>false</delivery>
+<count>6</count>
+</offer><offer id="32862" available="true">
+<currencyId>RUB</currencyId>
+<price>25500</price>
+<oldprice>45500</oldprice>
+<url>https://millargo.ru/product/armchair-titulo-indian-tree/</url>
+<delivery>false</delivery>
+<count>8</count>
+</offer><offer id="32856" available="true">
+<currencyId>RUB</currencyId>
+<price>25500</price>
+<oldprice>45500</oldprice>
+<url>https://millargo.ru/product/armchair-titulo-dominikana/</url>
+<delivery>false</delivery>
+<count>2</count>
+</offer><offer id="32852" available="true">
+<currencyId>RUB</currencyId>
+<price>43500</price>
+<oldprice>74600</oldprice>
+<url>https://millargo.ru/product/sofa-titulo-choco-metal/</url>
+<delivery>false</delivery>
+<count>1</count>
+</offer><offer id="32850" available="true">
+<currencyId>RUB</currencyId>
+<price>43500</price>
+<oldprice>74600</oldprice>
+<url>https://millargo.ru/product/sofa-titulo-indian-tree/</url>
+<delivery>false</delivery>
+<count>1</count>
+</offer><offer id="32845" available="true">
+<currencyId>RUB</currencyId>
+<price>43500</price>
+<oldprice>74600</oldprice>
+<url>https://millargo.ru/product/sofa-titulo-dominikana/</url>
+<delivery>false</delivery>
+<count>0</count>
+</offer><offer id="32841" available="true">
+<currencyId>RUB</currencyId>
+<price>181500</price>
+<oldprice>319600</oldprice>
+<url>https://millargo.ru/product/set-titulo-choco-metal/</url>
+<delivery>false</delivery>
+<count>1</count>
+</offer><offer id="32839" available="true">
+<currencyId>RUB</currencyId>
+<price>181500</price>
+<oldprice>319600</oldprice>
+<url>https://millargo.ru/product/set-titulo-indian-tree/</url>
+<delivery>false</delivery>
+<count>1</count>
+</offer><offer id="32834" available="true">
+<currencyId>RUB</currencyId>
+<price>181500</price>
+<oldprice>319600</oldprice>
+<url>https://millargo.ru/product/set-titulo-dominikana/</url>
+<delivery>false</delivery>
+<count>0</count>
+</offer><offer id="32806" available="true">
+<currencyId>RUB</currencyId>
+<price>48000</price>
+<url>https://millargo.ru/product/table-patio-dark-grey/</url>
+<delivery>false</delivery>
+<count>6</count>
+</offer><offer id="32802" available="true">
+<currencyId>RUB</currencyId>
+<price>48000</price>
+<url>https://millargo.ru/product/table-patio-hightstone/</url>
+<delivery>false</delivery>
+<count>3</count>
+</offer><offer id="32799" available="true">
+<currencyId>RUB</currencyId>
+<price>29400</price>
+<url>https://millargo.ru/product/chair-patio-black-metal/</url>
+<delivery>false</delivery>
+<count>5</count>
+</offer><offer id="32796" available="true">
+<currencyId>RUB</currencyId>
+<price>29400</price>
+<url>https://millargo.ru/product/chair-patio-irbis/</url>
+<delivery>false</delivery>
+<count>17</count>
+</offer><offer id="32790" available="true">
+<currencyId>RUB</currencyId>
+<price>29400</price>
+<url>https://millargo.ru/product/chair-patio-american-nut/</url>
+<delivery>false</delivery>
+<count>29</count>
+</offer><offer id="32787" available="true">
+<currencyId>RUB</currencyId>
+<price>165600</price>
+<url>https://millargo.ru/product/set-patio-black-metal/</url>
+<delivery>false</delivery>
+<count>2</count>
+</offer><offer id="32785" available="true">
+<currencyId>RUB</currencyId>
+<price>165600</price>
+<url>https://millargo.ru/product/set-patio-irbis/</url>
+<delivery>false</delivery>
+<count>2</count>
+</offer><offer id="32780" available="true">
+<currencyId>RUB</currencyId>
+<price>165600</price>
+<url>https://millargo.ru/product/set-patio-american-nut/</url>
+<delivery>false</delivery>
+<count>2</count>
+</offer><offer id="32761" available="true">
+<currencyId>RUB</currencyId>
+<price>33000</price>
+<oldprice>57600</oldprice>
+<url>https://millargo.ru/product/table-nova-irbis/</url>
+<delivery>false</delivery>
+<count>1</count>
+</offer><offer id="32757" available="true">
+<currencyId>RUB</currencyId>
+<price>33000</price>
+<oldprice>57600</oldprice>
+<url>https://millargo.ru/product/table-nova-african-sunset/</url>
+<delivery>false</delivery>
+<count>1</count>
+</offer><offer id="32754" available="true">
+<currencyId>RUB</currencyId>
+<price>19500</price>
+<oldprice>37100</oldprice>
+<url>https://millargo.ru/product/armchair-nova-irbis/</url>
+<delivery>false</delivery>
+<count>4</count>
+</offer><offer id="32750" available="true">
+<currencyId>RUB</currencyId>
+<price>19500</price>
+<oldprice>37100</oldprice>
+<url>https://millargo.ru/product/armchair-nova-african-sunset/</url>
+<delivery>false</delivery>
+<count>64</count>
+</offer><offer id="32746" available="true">
+<currencyId>RUB</currencyId>
+<price>29500</price>
+<oldprice>54300</oldprice>
+<url>https://millargo.ru/product/sofa-nova-irbis/</url>
+<delivery>false</delivery>
+<count>1</count>
+</offer><offer id="32741" available="true">
+<currencyId>RUB</currencyId>
+<price>29500</price>
+<oldprice>54300</oldprice>
+<url>https://millargo.ru/product/sofa-nova-african-sunset/</url>
+<delivery>false</delivery>
+<count>6</count>
+</offer><offer id="32736" available="true">
+<currencyId>RUB</currencyId>
+<price>140500</price>
+<oldprice>260300</oldprice>
+<url>https://millargo.ru/product/комплект-nova-американский-орех/</url>
+<delivery>false</delivery>
+<count>0</count>
+</offer><offer id="32726" available="true">
+<currencyId>RUB</currencyId>
+<price>140500</price>
+<oldprice>260300</oldprice>
+<url>https://millargo.ru/product/set-nova-african-sunset/</url>
+<delivery>false</delivery>
+<count>1</count>
+</offer><offer id="32719" available="true">
+<currencyId>RUB</currencyId>
+<price>30700</price>
+<url>https://millargo.ru/product/armchair-miro-black-metal/</url>
+<delivery>false</delivery>
+<count>22</count>
+</offer><offer id="32711" available="true">
+<currencyId>RUB</currencyId>
+<price>30700</price>
+<url>https://millargo.ru/product/armchair-miro-indian-tree/</url>
+<delivery>false</delivery>
+<count>23</count>
+</offer><offer id="32708" available="true">
+<currencyId>RUB</currencyId>
+<price>161500</price>
+<url>https://millargo.ru/product/set-miro-black-metal/</url>
+<delivery>false</delivery>
+<count>1</count>
+</offer><offer id="32694" available="true">
+<currencyId>RUB</currencyId>
+<price>161500</price>
+<url>https://millargo.ru/product/set-miro-indian-tree/</url>
+<delivery>false</delivery>
+<count>1</count>
+</offer><offer id="32691" available="true">
+<currencyId>RUB</currencyId>
+<price>33100</price>
+<url>https://millargo.ru/product/chair-letto-black-metal/</url>
+<delivery>false</delivery>
+<count>48</count>
+</offer><offer id="32687" available="true">
+<currencyId>RUB</currencyId>
+<price>33100</price>
+<url>https://millargo.ru/product/chair-letto-indian-tree/</url>
+<delivery>false</delivery>
+<count>45</count>
+</offer><offer id="32684" available="true">
+<currencyId>RUB</currencyId>
+<price>93000</price>
+<url>https://millargo.ru/product/sofa-letto-black-metal/</url>
+<delivery>false</delivery>
+<count>15</count>
+</offer><offer id="32678" available="true">
+<currencyId>RUB</currencyId>
+<price>93000</price>
+<url>https://millargo.ru/product/sofa-letto-indian-tree/</url>
+<delivery>false</delivery>
+<count>21</count>
+</offer><offer id="32675" available="true">
+<currencyId>RUB</currencyId>
+<price>243400</price>
+<url>https://millargo.ru/product/set-letto-black-metal/</url>
+<delivery>false</delivery>
+<count>3</count>
+</offer><offer id="32670" available="true">
+<currencyId>RUB</currencyId>
+<price>243400</price>
+<url>https://millargo.ru/product/set-letto-indian-tree/</url>
+<delivery>false</delivery>
+<count>3</count>
+</offer><offer id="32657" available="true">
+<currencyId>RUB</currencyId>
+<price>13500</price>
+<oldprice>28100</oldprice>
+<url>https://millargo.ru/product/armchair-kipr-chco-metal/</url>
+<delivery>false</delivery>
+<count>16</count>
+</offer><offer id="32653" available="true">
+<currencyId>RUB</currencyId>
+<price>13500</price>
+<oldprice>28100</oldprice>
+<url>https://millargo.ru/product/armchair-kipr-dominikana/</url>
+<delivery>false</delivery>
+<count>22</count>
+</offer><offer id="32636" available="true">
+<currencyId>RUB</currencyId>
+<price>39200</price>
+<url>https://millargo.ru/product/table-impero-black-metal/</url>
+<delivery>false</delivery>
+<count>0</count>
+</offer><offer id="32632" available="true">
+<currencyId>RUB</currencyId>
+<price>39200</price>
+<url>https://millargo.ru/product/table-impero-american-nut/</url>
+<delivery>false</delivery>
+<count>1</count>
+</offer><offer id="32627" available="true">
+<currencyId>RUB</currencyId>
+<price>39200</price>
+<url>https://millargo.ru/product/table-impero-dominikana/</url>
+<delivery>false</delivery>
+<count>0</count>
+</offer><offer id="32624" available="true">
+<currencyId>RUB</currencyId>
+<price>49600</price>
+<url>https://millargo.ru/product/armchair-impero-black-metal/</url>
+<delivery>false</delivery>
+<count>0</count>
+</offer><offer id="32622" available="true">
+<currencyId>RUB</currencyId>
+<price>49600</price>
+<url>https://millargo.ru/product/armchair-impero-american-nut/</url>
+<delivery>false</delivery>
+<count>2</count>
+</offer><offer id="32617" available="true">
+<currencyId>RUB</currencyId>
+<price>49600</price>
+<url>https://millargo.ru/product/armchair-impero-dominikana/</url>
+<delivery>false</delivery>
+<count>0</count>
+</offer><offer id="32613" available="true">
+<currencyId>RUB</currencyId>
+<price>94400</price>
+<url>https://millargo.ru/product/sofa-impero-black-metal/</url>
+<delivery>false</delivery>
+<count>0</count>
+</offer><offer id="32611" available="true">
+<currencyId>RUB</currencyId>
+<price>94400</price>
+<url>https://millargo.ru/product/sofa-impero-american-nut/</url>
+<delivery>false</delivery>
+<count>1</count>
+</offer><offer id="32606" available="true">
+<currencyId>RUB</currencyId>
+<price>94400</price>
+<url>https://millargo.ru/product/sofa-impero-dominikana/</url>
+<delivery>false</delivery>
+<count>0</count>
+</offer><offer id="32598" available="true">
+<currencyId>RUB</currencyId>
+<price>232800</price>
+<url>https://millargo.ru/product/set-impero-black-metal/</url>
+<delivery>false</delivery>
+<count>0</count>
+</offer><offer id="32593" available="true">
+<currencyId>RUB</currencyId>
+<price>232800</price>
+<url>https://millargo.ru/product/set-impero-american-nut/</url>
+<delivery>false</delivery>
+<count>1</count>
+</offer><offer id="32588" available="true">
+<currencyId>RUB</currencyId>
+<price>232800</price>
+<url>https://millargo.ru/product/set-impero-dominikana/</url>
+<delivery>false</delivery>
+<count>0</count>
+</offer><offer id="32482" available="true">
+<currencyId>RUB</currencyId>
+<price>33000</price>
+<oldprice>60400</oldprice>
+<url>https://millargo.ru/product/стол-primo-d1290-сицилия/</url>
+<delivery>false</delivery>
+<count>0</count>
+</offer><offer id="31980" available="true">
+<currencyId>RUB</currencyId>
+<price>383600</price>
+<url>https://millargo.ru/product/set-quadro-1650-light-gray/</url>
+<delivery>false</delivery>
+<count>0</count>
+</offer><offer id="31976" available="true">
+<currencyId>RUB</currencyId>
+<price>210200</price>
+<url>https://millargo.ru/product/set-quadro-990-bog-oak/</url>
+<delivery>false</delivery>
+<count>0</count>
+</offer><offer id="31966" available="true">
+<currencyId>RUB</currencyId>
+<price>162000</price>
+<oldprice>297400</oldprice>
+<url>https://millargo.ru/product/set-primo-d-milk-way/</url>
+<delivery>false</delivery>
+<count>1</count>
+</offer><offer id="31908" available="true">
+<currencyId>RUB</currencyId>
+<price>73500</price>
+<oldprice>150100</oldprice>
+<url>https://millargo.ru/product/set-kipr-сchco-metal/</url>
+<delivery>false</delivery>
+<count>1</count>
+</offer><offer id="31903" available="true">
+<currencyId>RUB</currencyId>
+<price>118000</price>
+<oldprice>226300</oldprice>
+<url>https://millargo.ru/product/set-kipr-dominikana/</url>
+<delivery>false</delivery>
+<count>0</count>
+</offer><offer id="31782" available="true">
+<currencyId>RUB</currencyId>
+<price>43400</price>
+<url>https://millargo.ru/product/table-quadro-990-bog-oak/</url>
+<delivery>false</delivery>
+<count>1</count>
+</offer><offer id="31780" available="true">
+<currencyId>RUB</currencyId>
+<price>82600</price>
+<url>https://millargo.ru/product/table-quadro-2300-black/</url>
+<delivery>false</delivery>
+<count>1</count>
+</offer><offer id="31775" available="true">
+<currencyId>RUB</currencyId>
+<price>53800</price>
+<url>https://millargo.ru/product/table-quadro-1650-light-gray/</url>
+<delivery>false</delivery>
+<count>2</count>
+</offer><offer id="31742" available="true">
+<currencyId>RUB</currencyId>
+<price>33000</price>
+<oldprice>60400</oldprice>
+<url>https://millargo.ru/product/table-primo-d1290-milk-way/</url>
+<delivery>false</delivery>
+<count>1</count>
+</offer><offer id="31661" available="true">
+<currencyId>RUB</currencyId>
+<price>19500</price>
+<oldprice>37700</oldprice>
+<url>https://millargo.ru/product/table-kipr-d940-chco-metal/</url>
+<delivery>false</delivery>
+<count>1</count>
+</offer><offer id="31654" available="true">
+<currencyId>RUB</currencyId>
+<price>34500</price>
+<oldprice>62000</oldprice>
+<url>https://millargo.ru/product/table-kipr-1420-dominikana/</url>
+<delivery>false</delivery>
+<count>0</count>
+</offer><offer id="31652" available="true">
+<currencyId>RUB</currencyId>
+<price>29500</price>
+<oldprice>51900</oldprice>
+<url>https://millargo.ru/product/sofa-kipr-dominikana/</url>
+<delivery>false</delivery>
+<count>0</count>
+</offer><offer id="31505" available="true">
+<currencyId>RUB</currencyId>
+<price>27900</price>
+<url>https://millargo.ru/product/table-letto-680/</url>
+<delivery>false</delivery>
+<count>3</count>
+</offer><offer id="31500" available="true">
+<currencyId>RUB</currencyId>
+<price>44800</price>
+<url>https://millargo.ru/product/table-letto-1500/</url>
+<delivery>false</delivery>
+<count>3</count>
+</offer></offers>
+</shop>
+</yml_catalog>

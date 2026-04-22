@@ -3,7 +3,10 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "node --dns-result-order=ipv4first node_modules/next/dist/bin/next dev",
+    "predev": "node scripts/kill-ports.js",
+    "dev:next": "node --dns-result-order=ipv4first node_modules/next/dist/bin/next dev",
+    "dev:chat": "node services/chat-server/server.js",
+    "dev": "concurrently --names \"next,chat\" --prefix-colors \"blue,green\" --kill-others \"npm run dev:next\" \"npm run dev:chat\"",
     "build": "next build",
     "start": "node --dns-result-order=ipv4first node_modules/next/dist/bin/next start",
     "lint": "next lint"
@@ -21,6 +24,7 @@
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-hook-form": "^7.48.2",
+    "sharp": "^0.34.5",
     "tailwind-merge": "^2.2.0",
     "xlsx": "^0.18.5",
     "zod": "^3.22.4"
@@ -33,6 +37,8 @@
     "@typescript-eslint/eslint-plugin": "^6.15.0",
     "@typescript-eslint/parser": "^6.15.0",
     "autoprefixer": "^10.4.16",
+    "cheerio": "^1.2.0",
+    "concurrently": "^9.2.1",
     "cross-env": "^10.1.0",
     "eslint": "^8.56.0",
     "eslint-config-next": "15.0.0",

@@ -39,7 +39,9 @@ function RelatedProductCard({ product }: { product: RelatedProduct }) {
       href={`/catalog/product/${product.slug}`}
       className="group bg-white rounded-xl border border-gray-200 overflow-hidden hover:shadow-lg transition-shadow"
     >
-      <div className="aspect-square bg-gray-100 overflow-hidden">
+      <div
+        className={`relative aspect-square bg-gray-100 overflow-hidden${relatedImage.includes("avito") ? " avito-badge" : ""}`}
+      >
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
           src={

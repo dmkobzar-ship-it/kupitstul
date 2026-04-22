@@ -33,6 +33,15 @@ const sheetToCategory = {
   "Кровати, диваны и кресл-Кровати": "krovati",
 };
 
+// Millargo-format sheets (different column layout: id=0, name=2, desc=3, images=4, price=11)
+const millargoSheetToCategory = {
+  "Садовые стулья и табуреты": "sadovaya-mebel",
+  "Садовые кресла": "sadovaya-mebel",
+  "Комплекты садовой мебели": "sadovaya-mebel",
+  "Садовые столы": "sadovaya-mebel",
+  "Садовые диваны": "sadovaya-mebel",
+};
+
 const categoryNames = {
   stulya: "Стулья",
   "barnye-stulya": "Барные стулья",
@@ -210,8 +219,11 @@ function parseSheet(ws, colMap, baseCategory, seenIds, filePrefix) {
 
     let category = baseCategory;
     const text = name.toLowerCase() + " " + description.toLowerCase();
-    if (chairType.toLowerCase().includes("барн") || text.includes("барн")) {
-      category = "barnye-stulya";
+    // Переводим в barnye-stulya только если базовая категория — стулья (не столы, кресла и т.д.)
+    if (baseCategory === "stulya") {
+      if (chairType.toLowerCase().includes("барн") || text.includes("барн")) {
+        category = "barnye-stulya";
+      }
     }
 
     const images = imagesRaw
@@ -256,6 +268,72 @@ function parseSheet(ws, colMap, baseCategory, seenIds, filePrefix) {
   return products;
 }
 
+function parseMillargoSheet(ws, category, seenIds, filePrefix) {
+  const data = XLSX.utils.sheet_to_json(ws, { header: 1, defval: "" });
+  const products = [];
+  // Millargo format: header in row 0, data from row 1
+  // id=0, name=2, desc=3, images=4 (or 5 for Комплекты), price=11 (or 12 for Комплекты)
+  // color=16 (or 17), width=17 (or 18), depth=18 (or 19), height=19 (or 20)
+  // Detect if there's an extra column (Состав комплекта) by checking header
+  const header = data[0] || [];
+  const hasComposition = String(header[4] || "").includes("Состав");
+  const imgCol = hasComposition ? 5 : 4;
+  const priceCol = hasComposition ? 12 : 11;
+  const colorCol = hasComposition ? 17 : 16;
+  const widthCol = hasComposition ? 18 : 17;
+  const depthCol = hasComposition ? 19 : 18;
+  const heightCol = hasComposition ? 20 : 19;
+
+  for (let i = 1; i < data.length; i++) {
+    const row = data[i];
+    if (!row || !row[0]) continue;
+    const rawId = String(row[0]).trim();
+    const id = filePrefix ? `${filePrefix}_${rawId}` : rawId;
+    if (seenIds.has(id)) continue;
+    seenIds.add(id);
+
+    const name = String(row[2] || "").trim();
+    const description = cleanHtml(String(row[3] || ""));
+    const price = parseFloat(row[priceCol]) || 0;
+    const imagesRaw = String(row[imgCol] || "");
+    const colorName = String(row[colorCol] || "");
+    const width = parseFloat(row[widthCol]) || undefined;
+    const depth = parseFloat(row[depthCol]) || undefined;
+    const height = parseFloat(row[heightCol]) || undefined;
+
+    if (!name || price <= 0) continue;
+
+    const images = imagesRaw
+      .split("|")
+      .map((url) => url.trim())
+      .filter((url) => url.startsWith("http"));
+
+    const color = parseColor(colorName);
+    const specs = {};
+    if (width) specs.width = width;
+    if (height) specs.height = height;
+    if (depth) specs.depth = depth;
+
+    products.push({
+      id,
+      name,
+      category,
+      slug: generateSlug(name, id),
+      description: description || undefined,
+      price,
+      images,
+      inStock: true,
+      specifications: Object.keys(specs).length > 0 ? specs : undefined,
+      colors: colorName ? [color] : undefined,
+      materials: [],
+      rating: (4.5 + Math.random() * 0.5).toFixed(1),
+      reviewsCount: Math.floor(Math.random() * 50) + 5,
+      badges: [],
+    });
+  }
+  return products;
+}
+
 function parseXlsx(excelPath, colMap, seenIds, filePrefix) {
   console.log(`\n📖 ${path.basename(excelPath)}`);
   const wb = XLSX.readFile(excelPath);
@@ -270,13 +348,25 @@ function parseXlsx(excelPath, colMap, seenIds, filePrefix) {
   let total = 0;
   const products = [];
   for (const sheetName of sheets) {
+    // Standard Avito format
     const cat = sheetToCategory[sheetName];
-    if (!cat) continue;
-    const ws = wb.Sheets[sheetName];
-    const p = parseSheet(ws, colMap, cat, seenIds, filePrefix);
-    process.stdout.write(`   ${sheetName}: ${p.length}\n`);
-    products.push(...p);
-    total += p.length;
+    if (cat) {
+      const ws = wb.Sheets[sheetName];
+      const p = parseSheet(ws, colMap, cat, seenIds, filePrefix);
+      process.stdout.write(`   ${sheetName}: ${p.length}\n`);
+      products.push(...p);
+      total += p.length;
+      continue;
+    }
+    // Millargo format
+    const milCat = millargoSheetToCategory[sheetName];
+    if (milCat) {
+      const ws = wb.Sheets[sheetName];
+      const p = parseMillargoSheet(ws, milCat, seenIds, filePrefix);
+      process.stdout.write(`   ${sheetName} [millargo]: ${p.length}\n`);
+      products.push(...p);
+      total += p.length;
+    }
   }
   console.log(`   → Total: ${total}`);
   return products;
