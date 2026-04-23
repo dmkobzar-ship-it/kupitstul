@@ -144,12 +144,6 @@ export default function RootLayout({
             {/* Онлайн-чат виджет */}
             <script
               src="/chat-widget.js"
-              data-ws={
-                process.env.NEXT_PUBLIC_CHAT_WS_URL ||
-                (process.env.NODE_ENV === "development"
-                  ? "ws://localhost:3002/ws/chat"
-                  : "wss://kupitstul.ru/ws/chat")
-              }
               data-color="#2563eb"
               data-title="Онлайн-консультант"
               data-subtitle="Обычно отвечаем в течение 5 минут"

@@ -4,9 +4,7 @@
   "private": true,
   "scripts": {
     "predev": "node scripts/kill-ports.js",
-    "dev:next": "node --dns-result-order=ipv4first node_modules/next/dist/bin/next dev",
-    "dev:chat": "node services/chat-server/server.js",
-    "dev": "concurrently --names \"next,chat\" --prefix-colors \"blue,green\" --kill-others \"npm run dev:next\" \"npm run dev:chat\"",
+    "dev": "node --dns-result-order=ipv4first node_modules/next/dist/bin/next dev",
     "build": "next build",
     "start": "node --dns-result-order=ipv4first node_modules/next/dist/bin/next start",
     "lint": "next lint"

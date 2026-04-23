@@ -4,7 +4,7 @@
  *
  * Usage:
  *   <script src="/chat-widget.js"
- *           data-ws="wss://yourdomain.com/ws/chat"
+ *           data-api=""
  *           data-position="right"
  *           data-color="#2563eb">
  *   </script>
@@ -12,13 +12,12 @@
  * Features:
  *   • Floating button with unread badge
  *   • Smooth open/close animation
- *   • Auto-reconnect WebSocket
+ *   • Long Polling (fetch every 3s) — no WebSocket needed
  *   • Message bubbles with timestamps
  *   • Typing indicator
  *   • Session persistence (localStorage)
  *   • Mobile responsive
  *   • Sound notification
- *   • Pre-chat name form
  */
 
 (function () {
@@ -28,8 +27,7 @@
 
   const scriptTag = document.currentScript;
   const CONF = {
-    wsUrl: scriptTag?.getAttribute("data-ws") || "ws://localhost:3002/ws/chat",
-    apiUrl: scriptTag?.getAttribute("data-api") || "http://localhost:3002",
+    apiUrl: scriptTag?.getAttribute("data-api") || "",
     position: scriptTag?.getAttribute("data-position") || "right", // 'left' | 'right'
     color: scriptTag?.getAttribute("data-color") || "#2563eb",
     title: scriptTag?.getAttribute("data-title") || "Онлайн-консультант",
@@ -40,26 +38,21 @@
       scriptTag?.getAttribute("data-greeting") ||
       "Здравствуйте! Чем могу помочь?",
     storageKey: "kupitstul_chat",
+    pollInterval: 3000,
   };
 
   // ─── State ────────────────────────────────────────────
 
-  let ws = null;
   let isOpen = false;
-  let isConnected = false;
   let sessionId = null;
   let visitorName = "";
   let messages = [];
   let unreadCount = 0;
-  let reconnectTimer = null;
-  let reconnectDelay = 1000;
-  let reconnectAttempts = 0;
-  const MAX_RECONNECT_ATTEMPTS = 10;
+  let pollTimer = null;
+  let lastSince = null; // ISO timestamp of last received message
+  let isSending = false;
   let typingTimer = null;
   let hasGreeted = false;
-  let wsAvailable = true;
-  let pendingMessage = null; // очередь пока нет соединения
-  let statusOfflineTimer = null; // дебаунс: не показывать «Переподключение» сразу
 
   // ─── Load State from localStorage ─────────────────────
 
@@ -482,6 +475,14 @@
         background: ${adjustColor(CONF.color, -15)};
       }
 
+      /* ─── Chat Body ────────────────────── */
+      #ks-chat-body {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+      }
+
       /* ─── Powered By ──────────────────── */
       .ks-powered {
         text-align: center;
@@ -585,14 +586,13 @@
     const body = document.getElementById("ks-chat-body");
     if (!body) return;
 
-    // Автоматически создаём сессию без запроса имени
     if (!sessionId) {
       sessionId = uuid();
       visitorName = "";
       saveState();
     }
     renderChatView();
-    connectWS();
+    startPolling();
   }
 
   function renderChatView() {
@@ -684,163 +684,98 @@
 
   // ─── Send Message ─────────────────────────────────────
 
-  function sendMessage() {
+  async function sendMessage() {
     const input = document.getElementById("ks-input");
-    if (!input) return;
+    if (!input || isSending) return;
 
     const text = input.value.trim();
     if (!text) return;
 
-    if (!isConnected) {
-      // Сохраняем и отправим после переподключения
-      pendingMessage = text;
-      input.value = "";
-      input.style.height = "auto";
-      addMessage("visitor", text);
-      renderMessages();
-      // Сбрасываем состояние и переподключаемся
-      reconnectAttempts = 0;
-      reconnectDelay = 1000;
-      clearTimeout(reconnectTimer);
-      reconnectTimer = null;
-      connectWS();
-      return;
-    }
-
-    ws.send(
-      JSON.stringify({
-        type: "message",
-        body: text,
-        name: visitorName,
-      }),
-    );
-
-    addMessage("visitor", text);
+    isSending = true;
     input.value = "";
     input.style.height = "auto";
-    input.focus();
-  }
-
-  // ─── WebSocket ────────────────────────────────────────
-
-  function connectWS() {
-    if (
-      ws &&
-      (ws.readyState === WebSocket.OPEN ||
-        ws.readyState === WebSocket.CONNECTING)
-    ) {
-      return;
-    }
+    addMessage("visitor", text);
+    renderMessages();
 
     try {
-      ws = new WebSocket(CONF.wsUrl);
-    } catch (err) {
-      console.warn("[Chat] WS create error:", err);
-      scheduleReconnect();
-      return;
-    }
-
-    ws.onopen = () => {
-      // Снимаем таймер «Переподключение» — соединение установлено
-      clearTimeout(statusOfflineTimer);
-      statusOfflineTimer = null;
-      isConnected = true;
-      reconnectDelay = 1000;
-      reconnectAttempts = 0;
-      wsAvailable = true;
-      updateStatus(true);
-
-      // Join session
-      ws.send(
-        JSON.stringify({
-          type: "join",
-          session_id: sessionId,
+      await fetch(CONF.apiUrl + "/api/chat/message", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          sessionId,
+          body: text,
           name: visitorName,
           page: window.location.href,
         }),
-      );
-
-      // Отправить ожидающее сообщение
-      if (pendingMessage) {
-        const msg = pendingMessage;
-        pendingMessage = null;
-        setTimeout(() => {
-          ws.send(
-            JSON.stringify({ type: "message", body: msg, name: visitorName }),
-          );
-        }, 200);
-      }
-    };
-
-    ws.onmessage = (event) => {
-      try {
-        const data = JSON.parse(event.data);
-
-        switch (data.type) {
-          case "joined":
-            // Load history
-            if (data.history && data.history.length > 0) {
-              messages = data.history.map((m) => ({
-                sender: m.sender,
-                body: m.body,
-                timestamp: m.created_at,
-              }));
-              renderMessages();
-            }
-            break;
-
-          case "message":
-            if (data.sender === "operator") {
-              addMessage("operator", data.body, data.timestamp);
-              hideTyping();
-
-              if (!isOpen) {
-                unreadCount++;
-                updateBadge();
-                playSound();
-              }
-            }
-            break;
-
-          case "typing":
-            if (data.sender === "operator") {
-              showTyping();
-            }
-            break;
-
-          case "error":
-            console.error("[Chat] Server error:", data.message);
-            break;
-        }
-      } catch (err) {
-        console.error("[Chat] Parse error:", err);
-      }
-    };
-
-    ws.onclose = () => {
-      isConnected = false;
-      // Показываем «Переподключение» только если не восстановились за 2.5с
-      clearTimeout(statusOfflineTimer);
-      statusOfflineTimer = setTimeout(() => updateStatus(false), 2500);
-      scheduleReconnect(); // всегда пробуем переподключиться
-    };
-
-    ws.onerror = () => {
-      isConnected = false;
-      reconnectAttempts++;
-      // не блокируем — onclose сам вызовет scheduleReconnect
-    };
+      });
+    } catch (e) {
+      console.warn("[Chat] Send failed:", e);
+    } finally {
+      isSending = false;
+      input.focus();
+    }
   }
 
-  function scheduleReconnect() {
-    if (reconnectTimer) return;
-    // Никогда не прекращаем попытки — задержка растёт до максимума 30с
-    const delay = Math.min(reconnectDelay, 30000);
-    reconnectTimer = setTimeout(() => {
-      reconnectTimer = null;
-      if (sessionId) connectWS();
-    }, delay);
-    reconnectDelay = Math.min(reconnectDelay * 1.5, 30000);
+  // ─── Long Polling ─────────────────────────────────────
+
+  async function pollMessages() {
+    if (!sessionId) return;
+    const isFirstLoad = lastSince === null;
+    try {
+      let url =
+        CONF.apiUrl +
+        "/api/chat/messages?sessionId=" +
+        encodeURIComponent(sessionId);
+      if (lastSince) url += "&since=" + encodeURIComponent(lastSince);
+
+      const res = await fetch(url);
+      if (!res.ok) return;
+      const data = await res.json();
+      const msgs = data.messages || [];
+
+      if (isFirstLoad) {
+        // History load: replace messages[] entirely
+        messages = msgs.map((m) => ({
+          sender: m.sender,
+          body: m.body,
+          timestamp: m.timestamp,
+        }));
+        if (msgs.length > 0) lastSince = msgs[msgs.length - 1].timestamp;
+        renderMessages();
+      } else {
+        // Incremental: only add operator replies (visitor shown optimistically)
+        let hasNew = false;
+        for (const m of msgs) {
+          if (!lastSince || m.timestamp > lastSince) lastSince = m.timestamp;
+          if (m.sender === "visitor") continue;
+          addMessage(m.sender, m.body, m.timestamp);
+          hideTyping();
+          hasNew = true;
+          if (!isOpen) {
+            unreadCount++;
+            updateBadge();
+            playSound();
+          }
+        }
+        if (hasNew) renderMessages();
+      }
+    } catch (e) {
+      // silent — network may be unreliable
+    }
+  }
+
+  function startPolling() {
+    if (pollTimer) return;
+    updateStatus(true);
+    pollMessages(); // immediate first call (loads history)
+    pollTimer = setInterval(pollMessages, CONF.pollInterval);
+  }
+
+  function stopPolling() {
+    if (pollTimer) {
+      clearInterval(pollTimer);
+      pollTimer = null;
+    }
   }
 
   // ─── UI Updates ───────────────────────────────────────
@@ -858,16 +793,9 @@
         '<span class="ks-btn-label">закрыть</span><span id="ks-chat-badge"></span>';
       unreadCount = 0;
       updateBadge();
-      // Сброс при каждом открытии — всегда пробуем соединиться
-      clearTimeout(statusOfflineTimer);
-      statusOfflineTimer = null;
-      clearTimeout(reconnectTimer);
-      reconnectTimer = null;
-      wsAvailable = true;
-      reconnectAttempts = 0;
-      reconnectDelay = 1000;
       renderBody();
     } else {
+      stopPolling();
       win?.classList.remove("ks-visible");
       btn?.classList.remove("ks-open");
       btn.innerHTML =
