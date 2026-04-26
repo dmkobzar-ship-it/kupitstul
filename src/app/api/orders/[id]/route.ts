@@ -56,7 +56,9 @@ export async function PATCH(
       where: { id },
       data: {
         ...(body.status && { status: body.status }),
-        ...(body.adminComment !== undefined && { adminComment: body.adminComment }),
+        ...(body.adminComment !== undefined && {
+          adminComment: body.adminComment,
+        }),
         statusHistory,
       },
     });

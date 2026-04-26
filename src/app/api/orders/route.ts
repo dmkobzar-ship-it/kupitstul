@@ -55,7 +55,11 @@ export async function POST(request: NextRequest) {
     }));
 
     const deliveryAddress = delivery
-      ? { method: delivery.method || "courier", city: delivery.city || "", address: delivery.address || "" }
+      ? {
+          method: delivery.method || "courier",
+          city: delivery.city || "",
+          address: delivery.address || "",
+        }
       : null;
 
     const order = await prisma.order.create({
@@ -75,14 +79,22 @@ export async function POST(request: NextRequest) {
         paymentMethod: payment?.method || "cash",
         paymentStatus: "pending",
         statusHistory: [
-          { status: "new", comment: "Заказ создан", createdAt: new Date().toISOString() },
+          {
+            status: "new",
+            comment: "Заказ создан",
+            createdAt: new Date().toISOString(),
+          },
         ],
       },
     });
 
     const notifData = {
       orderNumber: order.orderNumber,
-      customer: { name: order.customerName, phone: order.customerPhone, email: order.customerEmail || "" },
+      customer: {
+        name: order.customerName,
+        phone: order.customerPhone,
+        email: order.customerEmail || "",
+      },
       delivery: deliveryAddress || {},
       payment: { method: order.paymentMethod },
       items: cartItems,

@@ -42,18 +42,39 @@ export async function POST(request: NextRequest) {
 
     switch (event) {
       case "payment.succeeded":
-        statusHistory.push({ status: "paid", timestamp: new Date().toISOString(), comment: `Оплата получена (YooKassa: ${payment.id})` });
-        updateData = { paymentStatus: "paid", paymentId: payment.id, status: "paid", statusHistory };
+        statusHistory.push({
+          status: "paid",
+          timestamp: new Date().toISOString(),
+          comment: `Оплата получена (YooKassa: ${payment.id})`,
+        });
+        updateData = {
+          paymentStatus: "paid",
+          paymentId: payment.id,
+          status: "paid",
+          statusHistory,
+        };
         break;
 
       case "payment.canceled":
-        statusHistory.push({ status: "payment_cancelled", timestamp: new Date().toISOString(), comment: `Оплата отменена (YooKassa: ${payment.id})` });
+        statusHistory.push({
+          status: "payment_cancelled",
+          timestamp: new Date().toISOString(),
+          comment: `Оплата отменена (YooKassa: ${payment.id})`,
+        });
         updateData = { paymentStatus: "cancelled", statusHistory };
         break;
 
       case "refund.succeeded":
-        statusHistory.push({ status: "refunded", timestamp: new Date().toISOString(), comment: `Возврат выполнен (${payment.amount?.value} ${payment.amount?.currency})` });
-        updateData = { paymentStatus: "refunded", status: "refunded", statusHistory };
+        statusHistory.push({
+          status: "refunded",
+          timestamp: new Date().toISOString(),
+          comment: `Возврат выполнен (${payment.amount?.value} ${payment.amount?.currency})`,
+        });
+        updateData = {
+          paymentStatus: "refunded",
+          status: "refunded",
+          statusHistory,
+        };
         break;
 
       default:
