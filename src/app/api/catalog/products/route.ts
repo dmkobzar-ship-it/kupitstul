@@ -38,8 +38,21 @@ export async function GET(request: NextRequest) {
   const colors = searchParams.get("colors")?.split(",").filter(Boolean) ?? [];
   const inStockOnly = searchParams.get("inStockOnly") === "true";
   const sortBy = searchParams.get("sortBy") || "popular";
+  const category = searchParams.get("category") || "";
 
   let products: Product[] = getImportedProducts();
+
+  // Apply category filter
+  if (category) {
+    // stulya includes barnye-stulya (merged in UI)
+    if (category === "stulya") {
+      products = products.filter(
+        (p) => p.category === "stulya" || p.category === "barnye-stulya",
+      );
+    } else {
+      products = products.filter((p) => p.category === category);
+    }
+  }
 
   // Apply room filter (interleave categories for diverse display)
   if (room && roomCategories[room]) {

@@ -132,6 +132,10 @@ export default async function CategoryPage({
 
   const products = getProductsByCategory(category);
   const meta = categoryMeta[category];
+  const maxPrice =
+    products.length > 0
+      ? Math.ceil(Math.max(...products.map((p) => p.price || 0)) / 10000) * 10000
+      : 500000;
 
   const breadcrumbLd = {
     "@context": "https://schema.org",
@@ -232,7 +236,12 @@ export default async function CategoryPage({
 
         <div className="max-w-7xl mx-auto px-4 py-8">
           {products.length > 0 ? (
-            <FilteredCatalog products={products} initialCount={24} />
+            <FilteredCatalog
+              initialProducts={products.slice(0, 24)}
+              totalCount={products.length}
+              maxPrice={maxPrice}
+              serverFilters={{ category }}
+            />
           ) : (
             <div className="text-center py-16">
               <div className="text-gray-400 text-6xl mb-4">📦</div>

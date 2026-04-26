@@ -7,6 +7,7 @@ import InfiniteProductGrid from "./InfiniteProductGrid";
 import type { Product } from "@/types/product";
 
 interface ServerFilters {
+  category?: string;
   room?: string;
   style?: string;
   q?: string;
@@ -30,6 +31,7 @@ async function fetchCatalogPage(
     limit: "24",
     sortBy: filters.sortBy,
   });
+  if (serverFilters.category) params.set("category", serverFilters.category);
   if (serverFilters.room) params.set("room", serverFilters.room);
   if (serverFilters.style) params.set("style", serverFilters.style);
   if (serverFilters.q) params.set("q", serverFilters.q);
