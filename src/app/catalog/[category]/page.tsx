@@ -134,7 +134,8 @@ export default async function CategoryPage({
   const meta = categoryMeta[category];
   const maxPrice =
     products.length > 0
-      ? Math.ceil(Math.max(...products.map((p) => p.price || 0)) / 10000) * 10000
+      ? Math.ceil(Math.max(...products.map((p) => p.price || 0)) / 10000) *
+        10000
       : 500000;
 
   const breadcrumbLd = {
