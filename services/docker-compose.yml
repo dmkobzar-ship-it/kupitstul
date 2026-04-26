@@ -37,8 +37,14 @@ services:
       - "3000:3000"
     environment:
       - NODE_ENV=production
+      - MAX_BOT_TOKEN=${MAX_BOT_TOKEN:-}
+      - MAX_GROUP_CHAT_ID=${MAX_GROUP_CHAT_ID:-}
+      - MAX_WEBHOOK_URL=${MAX_WEBHOOK_URL:-https://kupitstul.ru/api/chat/webhook}
+      - TG_BOT_TOKEN=${TG_BOT_TOKEN:-}
+      - TG_CHAT_ID=${TG_CHAT_ID:-}
     volumes:
       - ../data:/app/data
+      - ../public/uploads:/app/public/uploads
     networks:
       - ks-network
 

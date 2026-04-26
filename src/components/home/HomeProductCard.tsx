@@ -31,7 +31,9 @@ export default function HomeProductCard({ product }: HomeProductCardProps) {
   const imageSrc =
     imageError || !product.images?.[0]
       ? `https://picsum.photos/seed/${product.id}/400/400`
-      : product.images[0];
+      : product.images[0].includes("avito.st")
+        ? `/api/img?url=${encodeURIComponent(product.images[0])}`
+        : product.images[0];
 
   return (
     <Link

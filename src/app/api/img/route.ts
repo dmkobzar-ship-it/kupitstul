@@ -61,7 +61,10 @@ export async function GET(req: NextRequest) {
   let imageBuffer: Buffer;
   try {
     const res = await fetch(url, {
-      headers: { "User-Agent": "Mozilla/5.0" },
+      headers: {
+        "User-Agent": "Mozilla/5.0",
+        "Referer": "https://www.avito.ru/",
+      },
       signal: AbortSignal.timeout(10_000),
     });
     if (!res.ok) {

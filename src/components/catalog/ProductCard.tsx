@@ -96,6 +96,10 @@ export default function ProductCard({ product }: ProductCardProps) {
     const originalUrl = allImages[index];
     // Если есть оригинальный URL и он не вызвал ошибку - используем его
     if (originalUrl && !imageErrors.has(index)) {
+      // Avito CDN блокирует hotlinking — проксируем через /api/img
+      if (originalUrl.includes("avito.st")) {
+        return `/api/img?url=${encodeURIComponent(originalUrl)}`;
+      }
       return originalUrl;
     }
     // Плейсхолдер только при ошибке загрузки

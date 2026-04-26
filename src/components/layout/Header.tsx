@@ -444,8 +444,11 @@ export default function Header() {
                         <div className="relative w-16 h-16 flex-shrink-0 rounded-xl overflow-hidden bg-gray-100 group-hover:shadow-md transition-shadow duration-300">
                           <Image
                             src={
-                              r.image ||
-                              `https://picsum.photos/seed/${r.id}/100/100`
+                              r.image
+                                ? r.image.includes("avito.st")
+                                  ? `/api/img?url=${encodeURIComponent(r.image)}`
+                                  : r.image
+                                : `https://picsum.photos/seed/${r.id}/100/100`
                             }
                             alt={r.name}
                             fill
