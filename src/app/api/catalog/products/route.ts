@@ -24,13 +24,17 @@ export async function GET(request: NextRequest) {
   const { searchParams } = request.nextUrl;
 
   const page = Math.max(1, parseInt(searchParams.get("page") || "1", 10));
-  const limit = Math.min(48, Math.max(1, parseInt(searchParams.get("limit") || "24", 10)));
+  const limit = Math.min(
+    48,
+    Math.max(1, parseInt(searchParams.get("limit") || "24", 10)),
+  );
   const room = searchParams.get("room") || "";
   const style = searchParams.get("style") || "";
   const q = searchParams.get("q") || "";
   const priceMin = parseFloat(searchParams.get("priceMin") || "0");
   const priceMax = parseFloat(searchParams.get("priceMax") || "0"); // 0 = no limit
-  const materials = searchParams.get("materials")?.split(",").filter(Boolean) ?? [];
+  const materials =
+    searchParams.get("materials")?.split(",").filter(Boolean) ?? [];
   const colors = searchParams.get("colors")?.split(",").filter(Boolean) ?? [];
   const inStockOnly = searchParams.get("inStockOnly") === "true";
   const sortBy = searchParams.get("sortBy") || "popular";
@@ -40,7 +44,9 @@ export async function GET(request: NextRequest) {
   // Apply room filter (interleave categories for diverse display)
   if (room && roomCategories[room]) {
     const cats = roomCategories[room];
-    const byCategory = cats.map((cat) => products.filter((p) => p.category === cat));
+    const byCategory = cats.map((cat) =>
+      products.filter((p) => p.category === cat),
+    );
     const interleaved: Product[] = [];
     const maxLen = Math.max(...byCategory.map((arr) => arr.length), 0);
     for (let i = 0; i < maxLen; i++) {
@@ -91,7 +97,9 @@ export async function GET(request: NextRequest) {
     products = products.filter((p) => {
       const specMat = p.specifications?.material?.toLowerCase() || "";
       const seatMat = p.specifications?.seatMaterial?.toLowerCase() || "";
-      const materialsArr = (p.materials || []).map((m: string) => m.toLowerCase());
+      const materialsArr = (p.materials || []).map((m: string) =>
+        m.toLowerCase(),
+      );
       const descLower = (p.description || "").toLowerCase();
       const nameLower = p.name.toLowerCase();
       return materials.some((fm) => {
@@ -112,7 +120,9 @@ export async function GET(request: NextRequest) {
     products = products.filter((p) => {
       const nameLower = p.name.toLowerCase();
       const descLower = (p.description || "").toLowerCase();
-      const productColors = (p.colors || []).map((c: { name: string }) => c.name.toLowerCase());
+      const productColors = (p.colors || []).map((c: { name: string }) =>
+        c.name.toLowerCase(),
+      );
       return colors.some((fc) => {
         const fcl = fc.toLowerCase();
         return (
@@ -139,8 +149,10 @@ export async function GET(request: NextRequest) {
       break;
     case "rating":
       products = [...products].sort((a, b) => {
-        const rA = typeof a.rating === "string" ? parseFloat(a.rating) : (a.rating || 0);
-        const rB = typeof b.rating === "string" ? parseFloat(b.rating) : (b.rating || 0);
+        const rA =
+          typeof a.rating === "string" ? parseFloat(a.rating) : a.rating || 0;
+        const rB =
+          typeof b.rating === "string" ? parseFloat(b.rating) : b.rating || 0;
         return rB - rA;
       });
       break;

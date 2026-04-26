@@ -34,11 +34,11 @@ async function fetchCatalogPage(
   if (serverFilters.style) params.set("style", serverFilters.style);
   if (serverFilters.q) params.set("q", serverFilters.q);
   if (filters.priceMin > 0) params.set("priceMin", String(filters.priceMin));
-  if (filters.priceMax < maxPrice) params.set("priceMax", String(filters.priceMax));
+  if (filters.priceMax < maxPrice)
+    params.set("priceMax", String(filters.priceMax));
   if (filters.materials.length > 0)
     params.set("materials", filters.materials.join(","));
-  if (filters.colors.length > 0)
-    params.set("colors", filters.colors.join(","));
+  if (filters.colors.length > 0) params.set("colors", filters.colors.join(","));
   if (filters.inStockOnly) params.set("inStockOnly", "true");
 
   const res = await fetch(`/api/catalog/products?${params.toString()}`);
@@ -65,7 +65,12 @@ export default function FilteredCatalog({
       setFilters(newFilters);
       setIsLoading(true);
       try {
-        const result = await fetchCatalogPage(newFilters, serverFilters, 1, maxPrice);
+        const result = await fetchCatalogPage(
+          newFilters,
+          serverFilters,
+          1,
+          maxPrice,
+        );
         setProducts(result.products);
         setTotal(result.total);
         setPage(1);
@@ -84,7 +89,12 @@ export default function FilteredCatalog({
     setIsLoading(true);
     try {
       const nextPage = page + 1;
-      const result = await fetchCatalogPage(filters, serverFilters, nextPage, maxPrice);
+      const result = await fetchCatalogPage(
+        filters,
+        serverFilters,
+        nextPage,
+        maxPrice,
+      );
       setProducts((prev) => [...prev, ...result.products]);
       setTotal(result.total);
       setPage(nextPage);
@@ -175,8 +185,7 @@ export default function FilteredCatalog({
               )}
             </button>
             <span className="text-gray-500 text-sm">
-              Найдено:{" "}
-              <strong className="text-gray-900">{total}</strong>{" "}
+              Найдено: <strong className="text-gray-900">{total}</strong>{" "}
               {total !== totalCount && (
                 <span className="text-gray-400">из {totalCount}</span>
               )}
@@ -316,4 +325,3 @@ function FilterTag({
     </span>
   );
 }
-

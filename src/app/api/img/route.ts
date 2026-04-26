@@ -63,7 +63,7 @@ export async function GET(req: NextRequest) {
     const res = await fetch(url, {
       headers: {
         "User-Agent": "Mozilla/5.0",
-        "Referer": "https://www.avito.ru/",
+        Referer: "https://www.avito.ru/",
       },
       signal: AbortSignal.timeout(10_000),
     });

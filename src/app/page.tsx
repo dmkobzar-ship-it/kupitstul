@@ -95,7 +95,8 @@ export default function Home() {
               <div className="inline-flex items-center gap-2 bg-gray-50 border border-gray-200 px-4 py-2 rounded-full">
                 <span className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></span>
                 <span className="text-sm font-medium text-[#374151]">
-                  Более {getImportedProducts().length.toLocaleString("ru-RU")} товаров в наличии
+                  Более {getImportedProducts().length.toLocaleString("ru-RU")}{" "}
+                  товаров в наличии
                 </span>
               </div>
 
