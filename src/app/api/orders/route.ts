@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getDatabase } from "@/lib/database";
+import { prisma } from "@/lib/prisma";
 import { sendOrderNotification } from "@/lib/telegram";
 import { sendOrderNotification as sendMaxNotification } from "@/lib/max-notify";
 
@@ -44,65 +44,52 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const order = {
-      id: `order_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`,
-      number: generateOrderNumber(),
-      customer: {
-        name: customer.name,
-        phone: customer.phone,
-        email: customer.email || "",
-      },
-      delivery: {
-        method: delivery?.method || "courier",
-        city: delivery?.city || "",
-        address: delivery?.address || "",
-      },
-      payment: {
-        method: payment?.method || "cash",
-        status: "pending",
-      },
-      comment: comment || "",
-      items: items.map((item: any) => ({
-        productId: item.productId,
-        name: item.name,
-        price: item.price,
-        quantity: item.quantity,
-        image: item.image || "",
-        slug: item.slug || "",
-        total: item.price * item.quantity,
-      })),
-      subtotal: subtotal || 0,
-      deliveryPrice: deliveryPrice || 0,
-      total: total || 0,
-      status: "new",
-      statusHistory: [
-        {
-          status: "new",
-          comment: "Заказ создан",
-          createdAt: new Date().toISOString(),
-        },
-      ],
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-    };
+    const cartItems = items.map((item: any) => ({
+      productId: item.productId,
+      name: item.name,
+      price: item.price,
+      quantity: item.quantity,
+      image: item.image || "",
+      slug: item.slug || "",
+      total: item.price * item.quantity,
+    }));
 
-    const db = await getDatabase();
-    if (!db.data!.orders) {
-      db.data!.orders = [];
-    }
-    db.data!.orders.unshift(order);
-    await db.write();
+    const deliveryAddress = delivery
+      ? { method: delivery.method || "courier", city: delivery.city || "", address: delivery.address || "" }
+      : null;
+
+    const order = await prisma.order.create({
+      data: {
+        orderNumber: generateOrderNumber(),
+        customerName: customer.name,
+        customerPhone: customer.phone,
+        customerEmail: customer.email || null,
+        customerComment: comment || null,
+        cartItems,
+        subtotal: subtotal || 0,
+        deliveryPrice: deliveryPrice || 0,
+        total: total || 0,
+        status: "new",
+        deliveryMethod: delivery?.method || "courier",
+        deliveryAddress,
+        paymentMethod: payment?.method || "cash",
+        paymentStatus: "pending",
+        statusHistory: [
+          { status: "new", comment: "Заказ создан", createdAt: new Date().toISOString() },
+        ],
+      },
+    });
 
     const notifData = {
-      orderNumber: order.number,
-      customer: order.customer,
-      delivery: order.delivery,
-      payment: order.payment,
-      items: order.items,
+      orderNumber: order.orderNumber,
+      customer: { name: order.customerName, phone: order.customerPhone, email: order.customerEmail || "" },
+      delivery: deliveryAddress || {},
+      payment: { method: order.paymentMethod },
+      items: cartItems,
       subtotal: order.subtotal,
       deliveryPrice: order.deliveryPrice,
       total: order.total,
-      comment: order.comment,
+      comment: order.customerComment || "",
     };
 
     // Send Telegram notification (async, don't block response)
@@ -117,7 +104,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({
       success: true,
-      data: { id: order.id, number: order.number },
+      data: { id: order.id, number: order.orderNumber },
       message: "Заказ успешно создан",
     });
   } catch (error) {
@@ -136,20 +123,20 @@ export async function GET(request: NextRequest) {
     const page = parseInt(searchParams.get("page") || "1");
     const limit = parseInt(searchParams.get("limit") || "20");
 
-    const db = await getDatabase();
-    let orders = db.data!.orders || [];
-
-    if (status) {
-      orders = orders.filter((o: any) => o.status === status);
-    }
-
-    const total = orders.length;
-    const start = (page - 1) * limit;
-    const paginated = orders.slice(start, start + limit);
+    const where = status ? { status } : {};
+    const [orders, total] = await Promise.all([
+      prisma.order.findMany({
+        where,
+        orderBy: { createdAt: "desc" },
+        skip: (page - 1) * limit,
+        take: limit,
+      }),
+      prisma.order.count({ where }),
+    ]);
 
     return NextResponse.json({
       success: true,
-      data: paginated,
+      data: orders,
       pagination: {
         page,
         limit,

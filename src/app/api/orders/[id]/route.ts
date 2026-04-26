@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getDatabase } from "@/lib/database";
+import { prisma } from "@/lib/prisma";
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
@@ -9,8 +9,7 @@ export async function GET(
 ) {
   try {
     const { id } = await params;
-    const db = await getDatabase();
-    const order = (db.data!.orders || []).find((o: any) => o.id === id);
+    const order = await prisma.order.findUnique({ where: { id } });
 
     if (!order) {
       return NextResponse.json(
@@ -35,37 +34,32 @@ export async function PATCH(
   try {
     const { id } = await params;
     const body = await request.json();
-    const db = await getDatabase();
 
-    const orders = db.data!.orders || [];
-    const index = orders.findIndex((o: any) => o.id === id);
-
-    if (index === -1) {
+    const existing = await prisma.order.findUnique({ where: { id } });
+    if (!existing) {
       return NextResponse.json(
         { success: false, error: "Заказ не найден" },
         { status: 404 },
       );
     }
 
-    const order = orders[index];
-
+    const statusHistory = (existing.statusHistory as any[]) || [];
     if (body.status) {
-      order.status = body.status;
-      order.statusHistory = order.statusHistory || [];
-      order.statusHistory.push({
+      statusHistory.push({
         status: body.status,
         comment: body.comment || "",
         createdAt: new Date().toISOString(),
       });
     }
 
-    if (body.adminComment !== undefined) {
-      order.adminComment = body.adminComment;
-    }
-
-    order.updatedAt = new Date().toISOString();
-    db.data!.orders[index] = order;
-    await db.write();
+    const order = await prisma.order.update({
+      where: { id },
+      data: {
+        ...(body.status && { status: body.status }),
+        ...(body.adminComment !== undefined && { adminComment: body.adminComment }),
+        statusHistory,
+      },
+    });
 
     return NextResponse.json({ success: true, data: order });
   } catch (error) {

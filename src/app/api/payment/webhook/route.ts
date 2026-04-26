@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getPaymentStatus } from "@/lib/payment";
-import { getDatabase } from "@/lib/database";
+import { prisma } from "@/lib/prisma";
 
 /**
  * POST /api/payment/webhook
@@ -30,58 +30,39 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ received: true });
     }
 
-    const db = await getDatabase();
+    const existing = await prisma.order.findUnique({ where: { id: orderId } });
 
-    // Find the order
-    const order = db.data.orders?.find((o: { id: string }) => o.id === orderId);
-
-    if (!order) {
+    if (!existing) {
       console.warn(`[Payment Webhook] Order ${orderId} not found`);
       return NextResponse.json({ received: true });
     }
 
+    const statusHistory = (existing.statusHistory as any[]) || [];
+    let updateData: any = {};
+
     switch (event) {
       case "payment.succeeded":
-        // Payment successful - update order
-        order.paymentStatus = "paid";
-        order.paymentId = payment.id;
-        order.status = "paid";
-        order.statusHistory = order.statusHistory || [];
-        order.statusHistory.push({
-          status: "paid",
-          timestamp: new Date().toISOString(),
-          comment: `Оплата получена (YooKassa: ${payment.id})`,
-        });
+        statusHistory.push({ status: "paid", timestamp: new Date().toISOString(), comment: `Оплата получена (YooKassa: ${payment.id})` });
+        updateData = { paymentStatus: "paid", paymentId: payment.id, status: "paid", statusHistory };
         break;
 
       case "payment.canceled":
-        // Payment canceled
-        order.paymentStatus = "cancelled";
-        order.statusHistory = order.statusHistory || [];
-        order.statusHistory.push({
-          status: "payment_cancelled",
-          timestamp: new Date().toISOString(),
-          comment: `Оплата отменена (YooKassa: ${payment.id})`,
-        });
+        statusHistory.push({ status: "payment_cancelled", timestamp: new Date().toISOString(), comment: `Оплата отменена (YooKassa: ${payment.id})` });
+        updateData = { paymentStatus: "cancelled", statusHistory };
         break;
 
       case "refund.succeeded":
-        // Refund successful
-        order.paymentStatus = "refunded";
-        order.status = "refunded";
-        order.statusHistory = order.statusHistory || [];
-        order.statusHistory.push({
-          status: "refunded",
-          timestamp: new Date().toISOString(),
-          comment: `Возврат выполнен (${payment.amount?.value} ${payment.amount?.currency})`,
-        });
+        statusHistory.push({ status: "refunded", timestamp: new Date().toISOString(), comment: `Возврат выполнен (${payment.amount?.value} ${payment.amount?.currency})` });
+        updateData = { paymentStatus: "refunded", status: "refunded", statusHistory };
         break;
 
       default:
         console.log(`[Payment Webhook] Unhandled event: ${event}`);
     }
 
-    await db.write();
+    if (Object.keys(updateData).length > 0) {
+      await prisma.order.update({ where: { id: orderId }, data: updateData });
+    }
 
     return NextResponse.json({ received: true });
   } catch (error) {

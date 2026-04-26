@@ -1,54 +1,39 @@
 import { NextResponse } from "next/server";
-import { getDatabase } from "@/lib/database";
+import { prisma } from "@/lib/prisma";
+import { getImportedProducts, getImportedCategories } from "@/data/importedProducts";
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
 export async function GET() {
   try {
-    const db = await getDatabase();
-    const products = db.data!.products || [];
-    const orders = db.data!.orders || [];
-    const categories = db.data!.categories || [];
-
-    const activeProducts = products.filter((p: any) => p.isActive !== false);
+    const products = getImportedProducts();
+    const categories = getImportedCategories();
+    const activeProducts = products.filter((p: any) => p.isActive !== false && p.status !== "hidden");
     const inStockProducts = activeProducts.filter((p: any) => p.inStock);
 
-    // Revenue
-    const totalRevenue = orders.reduce(
-      (sum: number, o: any) => sum + (o.total || 0),
-      0,
-    );
-
-    // Recent orders (last 30 days)
     const thirtyDaysAgo = new Date();
     thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
-    const recentOrders = orders.filter(
-      (o: any) => new Date(o.createdAt) >= thirtyDaysAgo,
-    );
+    const todayStart = new Date();
+    todayStart.setHours(0, 0, 0, 0);
 
-    // Today's orders
-    const today = new Date().toISOString().slice(0, 10);
-    const todayOrders = orders.filter(
-      (o: any) => o.createdAt?.slice(0, 10) === today,
-    );
+    const [totalRevenue, totalOrders, recentOrders, todayOrders, statusRows, allOrders] = await Promise.all([
+      prisma.order.aggregate({ _sum: { total: true } }),
+      prisma.order.count(),
+      prisma.order.count({ where: { createdAt: { gte: thirtyDaysAgo } } }),
+      prisma.order.count({ where: { createdAt: { gte: todayStart } } }),
+      prisma.order.groupBy({ by: ["status"], _count: { id: true } }),
+      prisma.order.findMany({ select: { cartItems: true } }),
+    ]);
 
-    // Top products by orders
-    const productOrderCount: Record<
-      string,
-      { name: string; count: number; revenue: number }
-    > = {};
-    orders.forEach((order: any) => {
-      (order.items || []).forEach((item: any) => {
+    // Top products by revenue
+    const productOrderCount: Record<string, { name: string; count: number; revenue: number }> = {};
+    allOrders.forEach((order: any) => {
+      ((order.cartItems as any[]) || []).forEach((item: any) => {
         if (!productOrderCount[item.productId]) {
-          productOrderCount[item.productId] = {
-            name: item.name,
-            count: 0,
-            revenue: 0,
-          };
+          productOrderCount[item.productId] = { name: item.name, count: 0, revenue: 0 };
         }
         productOrderCount[item.productId].count += item.quantity || 1;
-        productOrderCount[item.productId].revenue +=
-          item.total || item.price * item.quantity;
+        productOrderCount[item.productId].revenue += item.total || item.price * item.quantity;
       });
     });
 
@@ -57,11 +42,8 @@ export async function GET() {
       .slice(0, 5)
       .map(([id, data]) => ({ productId: id, ...data }));
 
-    // Order statuses breakdown
     const statusCounts: Record<string, number> = {};
-    orders.forEach((o: any) => {
-      statusCounts[o.status] = (statusCounts[o.status] || 0) + 1;
-    });
+    statusRows.forEach((r: any) => { statusCounts[r.status] = r._count.id; });
 
     return NextResponse.json({
       success: true,
@@ -72,15 +54,14 @@ export async function GET() {
           outOfStock: activeProducts.length - inStockProducts.length,
         },
         orders: {
-          total: orders.length,
-          today: todayOrders.length,
-          thisMonth: recentOrders.length,
+          total: totalOrders,
+          today: todayOrders,
+          thisMonth: recentOrders,
           statuses: statusCounts,
         },
         revenue: {
-          total: totalRevenue,
-          average:
-            orders.length > 0 ? Math.round(totalRevenue / orders.length) : 0,
+          total: totalRevenue._sum.total || 0,
+          average: totalOrders > 0 ? Math.round((totalRevenue._sum.total || 0) / totalOrders) : 0,
         },
         categories: categories.length,
         topProducts,
