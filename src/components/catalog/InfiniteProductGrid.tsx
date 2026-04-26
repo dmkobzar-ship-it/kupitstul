@@ -1,45 +1,31 @@
 "use client";
 
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useEffect, useRef } from "react";
 import ProductCard from "@/components/catalog/ProductCard";
 import type { Product } from "@/types/product";
 
 interface InfiniteProductGridProps {
   products: Product[];
-  initialCount?: number;
-  loadMoreCount?: number;
+  total: number;
+  hasMore: boolean;
+  isLoading: boolean;
+  onLoadMore: () => void;
 }
 
 export default function InfiniteProductGrid({
   products,
-  initialCount = 24,
-  loadMoreCount = 12,
+  total,
+  hasMore,
+  isLoading,
+  onLoadMore,
 }: InfiniteProductGridProps) {
-  const [displayCount, setDisplayCount] = useState(initialCount);
-  const [isLoading, setIsLoading] = useState(false);
   const loaderRef = useRef<HTMLDivElement>(null);
-
-  const displayedProducts = products.slice(0, displayCount);
-  const hasMore = displayCount < products.length;
-
-  const loadMore = useCallback(() => {
-    if (isLoading || !hasMore) return;
-
-    setIsLoading(true);
-    // Небольшая задержка для плавности
-    setTimeout(() => {
-      setDisplayCount((prev) =>
-        Math.min(prev + loadMoreCount, products.length),
-      );
-      setIsLoading(false);
-    }, 300);
-  }, [isLoading, hasMore, loadMoreCount, products.length]);
 
   useEffect(() => {
     const observer = new IntersectionObserver(
       (entries) => {
         if (entries[0].isIntersecting && hasMore && !isLoading) {
-          loadMore();
+          onLoadMore();
         }
       },
       { threshold: 0.1, rootMargin: "100px" },
@@ -50,13 +36,13 @@ export default function InfiniteProductGrid({
     }
 
     return () => observer.disconnect();
-  }, [loadMore, hasMore, isLoading]);
+  }, [onLoadMore, hasMore, isLoading]);
 
   return (
     <>
       {/* Сетка товаров */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
-        {displayedProducts.map((product) => (
+        {products.map((product) => (
           <ProductCard key={product.id} product={product} />
         ))}
       </div>
@@ -74,10 +60,10 @@ export default function InfiniteProductGrid({
             </div>
           ) : (
             <button
-              onClick={loadMore}
+              onClick={onLoadMore}
               className="px-6 py-3 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-xl font-medium transition-colors"
             >
-              Показать ещё ({products.length - displayCount} товаров)
+              Показать ещё ({total - products.length} товаров)
             </button>
           )}
         </div>
@@ -85,7 +71,7 @@ export default function InfiniteProductGrid({
 
       {/* Показано товаров */}
       <div className="text-center text-gray-500 text-sm mt-4">
-        Показано {displayedProducts.length} из {products.length} товаров
+        Показано {products.length} из {total} товаров
       </div>
     </>
   );

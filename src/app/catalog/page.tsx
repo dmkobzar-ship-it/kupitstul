@@ -9,7 +9,7 @@ import {
 export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
-  title: "Каталог мебели - КупитьСтул | Более 5000 товаров",
+  title: "Каталог мебели - КупитьСтул | Более 3500 товаров",
   description:
     "Каталог премиальной мебели: стулья, столы, кресла, диваны, освещение. Бесплатная доставка по Москве. Гарантия 1 год.",
   keywords: [
@@ -196,7 +196,18 @@ export default async function CatalogPage({
       {/* Основной контент с фильтрами */}
       <section className="py-8 lg:py-12">
         <div className="container">
-          <FilteredCatalog products={filteredProducts} initialCount={24} />
+          <FilteredCatalog
+            initialProducts={filteredProducts.slice(0, 24)}
+            totalCount={filteredProducts.length}
+            maxPrice={
+              filteredProducts.length > 0
+                ? Math.ceil(
+                    Math.max(...filteredProducts.map((p) => p.price)) / 10000,
+                  ) * 10000
+                : 500000
+            }
+            serverFilters={{ room, style, q }}
+          />
         </div>
       </section>
 

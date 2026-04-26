@@ -1,127 +1,113 @@
 "use client";
 
-import { useState, useMemo, useCallback } from "react";
+import { useState, useCallback } from "react";
 import { SlidersHorizontal, X, ArrowUpDown } from "lucide-react";
 import FilterPanel, { FilterValues, defaultFilters } from "./FilterPanel";
 import InfiniteProductGrid from "./InfiniteProductGrid";
 import type { Product } from "@/types/product";
 
+interface ServerFilters {
+  room?: string;
+  style?: string;
+  q?: string;
+}
+
 interface FilteredCatalogProps {
-  products: Product[];
-  initialCount?: number;
+  initialProducts: Product[];
+  totalCount: number;
+  maxPrice: number;
+  serverFilters?: ServerFilters;
+}
+
+async function fetchCatalogPage(
+  filters: FilterValues,
+  serverFilters: ServerFilters,
+  page: number,
+  maxPrice: number,
+): Promise<{ products: Product[]; total: number; hasMore: boolean }> {
+  const params = new URLSearchParams({
+    page: String(page),
+    limit: "24",
+    sortBy: filters.sortBy,
+  });
+  if (serverFilters.room) params.set("room", serverFilters.room);
+  if (serverFilters.style) params.set("style", serverFilters.style);
+  if (serverFilters.q) params.set("q", serverFilters.q);
+  if (filters.priceMin > 0) params.set("priceMin", String(filters.priceMin));
+  if (filters.priceMax < maxPrice) params.set("priceMax", String(filters.priceMax));
+  if (filters.materials.length > 0)
+    params.set("materials", filters.materials.join(","));
+  if (filters.colors.length > 0)
+    params.set("colors", filters.colors.join(","));
+  if (filters.inStockOnly) params.set("inStockOnly", "true");
+
+  const res = await fetch(`/api/catalog/products?${params.toString()}`);
+  if (!res.ok) throw new Error("Failed to fetch products");
+  return res.json();
 }
 
 export default function FilteredCatalog({
-  products,
-  initialCount = 24,
+  initialProducts,
+  totalCount,
+  maxPrice,
+  serverFilters = {},
 }: FilteredCatalogProps) {
   const [filters, setFilters] = useState<FilterValues>(defaultFilters);
+  const [products, setProducts] = useState<Product[]>(initialProducts);
+  const [total, setTotal] = useState(totalCount);
+  const [page, setPage] = useState(1);
+  const [hasMore, setHasMore] = useState(initialProducts.length < totalCount);
+  const [isLoading, setIsLoading] = useState(false);
   const [isMobileFilterOpen, setIsMobileFilterOpen] = useState(false);
 
-  // Find max price in products for slider
-  const maxPrice = useMemo(() => {
-    const max = Math.max(...products.map((p) => p.price), 0);
-    return Math.ceil(max / 10000) * 10000; // round up to nearest 10k
-  }, [products]);
+  const applyFilters = useCallback(
+    async (newFilters: FilterValues) => {
+      setFilters(newFilters);
+      setIsLoading(true);
+      try {
+        const result = await fetchCatalogPage(newFilters, serverFilters, 1, maxPrice);
+        setProducts(result.products);
+        setTotal(result.total);
+        setPage(1);
+        setHasMore(result.hasMore);
+      } catch (e) {
+        console.error("Filter fetch error:", e);
+      } finally {
+        setIsLoading(false);
+      }
+    },
+    [serverFilters, maxPrice],
+  );
 
-  // Apply filters to products
-  const filteredProducts = useMemo(() => {
-    let result = products;
-
-    // Price filter
-    if (filters.priceMin > 0) {
-      result = result.filter((p) => p.price >= filters.priceMin);
+  const loadMore = useCallback(async () => {
+    if (isLoading || !hasMore) return;
+    setIsLoading(true);
+    try {
+      const nextPage = page + 1;
+      const result = await fetchCatalogPage(filters, serverFilters, nextPage, maxPrice);
+      setProducts((prev) => [...prev, ...result.products]);
+      setTotal(result.total);
+      setPage(nextPage);
+      setHasMore(result.hasMore);
+    } catch (e) {
+      console.error("Load more error:", e);
+    } finally {
+      setIsLoading(false);
     }
-    if (filters.priceMax < maxPrice) {
-      result = result.filter((p) => p.price <= filters.priceMax);
-    }
+  }, [isLoading, hasMore, page, filters, serverFilters, maxPrice]);
 
-    // Material filter — check materials array, specifications, and description
-    if (filters.materials.length > 0) {
-      result = result.filter((p) => {
-        const specMat = p.specifications?.material?.toLowerCase() || "";
-        const seatMat = p.specifications?.seatMaterial?.toLowerCase() || "";
-        const materialsArr = (p.materials || []).map((m) => m.toLowerCase());
-        const descLower = (p.description || "").toLowerCase();
-        const nameLower = p.name.toLowerCase();
-        return filters.materials.some((fm) => {
-          const fml = fm.toLowerCase();
-          return (
-            specMat.includes(fml) ||
-            seatMat.includes(fml) ||
-            materialsArr.some((m) => m.includes(fml)) ||
-            descLower.includes(fml) ||
-            nameLower.includes(fml)
-          );
-        });
-      });
-    }
-
-    // Color filter — check colors array, product name, and description
-    if (filters.colors.length > 0) {
-      result = result.filter((p) => {
-        const nameLower = p.name.toLowerCase();
-        const descLower = (p.description || "").toLowerCase();
-        const productColors = (p.colors || []).map((c) => c.name.toLowerCase());
-        return filters.colors.some((fc) => {
-          const fcl = fc.toLowerCase();
-          return (
-            nameLower.includes(fcl) ||
-            descLower.includes(fcl) ||
-            productColors.some((pc) => pc.includes(fcl))
-          );
-        });
-      });
-    }
-
-    // Stock filter
-    if (filters.inStockOnly) {
-      result = result.filter((p) => p.inStock);
-    }
-
-    // Sorting
-    switch (filters.sortBy) {
-      case "price-asc":
-        result = [...result].sort((a, b) => a.price - b.price);
-        break;
-      case "price-desc":
-        result = [...result].sort((a, b) => b.price - a.price);
-        break;
-      case "rating":
-        result = [...result].sort((a, b) => {
-          const rA =
-            typeof a.rating === "string" ? parseFloat(a.rating) : a.rating || 0;
-          const rB =
-            typeof b.rating === "string" ? parseFloat(b.rating) : b.rating || 0;
-          return rB - rA;
-        });
-        break;
-      case "new":
-        result = [...result].sort((a, b) => {
-          const aNew = a.badges?.includes("Новинка") ? 1 : 0;
-          const bNew = b.badges?.includes("Новинка") ? 1 : 0;
-          return bNew - aNew;
-        });
-        break;
-      case "popular":
-      default:
-        // Already sorted by popularity by default (order from source)
-        break;
-    }
-
-    return result;
-  }, [products, filters, maxPrice]);
-
-  const handleFilterChange = useCallback((newFilters: FilterValues) => {
-    setFilters(newFilters);
-  }, []);
+  const handleFilterChange = useCallback(
+    (newFilters: FilterValues) => {
+      applyFilters(newFilters);
+    },
+    [applyFilters],
+  );
 
   const handleSortChange = useCallback(
     (sortBy: string) => {
-      const newFilters = { ...filters, sortBy };
-      setFilters(newFilters);
+      applyFilters({ ...filters, sortBy });
     },
-    [filters],
+    [filters, applyFilters],
   );
 
   const activeFilterCount =
@@ -190,11 +176,9 @@ export default function FilteredCatalog({
             </button>
             <span className="text-gray-500 text-sm">
               Найдено:{" "}
-              <strong className="text-gray-900">
-                {filteredProducts.length}
-              </strong>{" "}
-              {filteredProducts.length !== products.length && (
-                <span className="text-gray-400">из {products.length}</span>
+              <strong className="text-gray-900">{total}</strong>{" "}
+              {total !== totalCount && (
+                <span className="text-gray-400">из {totalCount}</span>
               )}
             </span>
           </div>
@@ -272,14 +256,18 @@ export default function FilteredCatalog({
           </div>
         )}
 
+        {/* Loading overlay when re-filtering */}
+        {isLoading && products.length === 0 && (
+          <div className="flex justify-center items-center py-24">
+            <div className="flex items-center gap-3">
+              <div className="w-6 h-6 border-2 border-gray-300 border-t-gray-900 rounded-full animate-spin" />
+              <span className="text-gray-500">Загрузка...</span>
+            </div>
+          </div>
+        )}
+
         {/* Product grid or empty state */}
-        {filteredProducts.length > 0 ? (
-          <InfiniteProductGrid
-            products={filteredProducts}
-            initialCount={initialCount}
-            loadMoreCount={12}
-          />
-        ) : (
+        {!isLoading && products.length === 0 ? (
           <div className="text-center py-16">
             <div className="text-gray-400 text-6xl mb-4">🔍</div>
             <h2 className="text-xl font-semibold text-gray-700 mb-2">
@@ -295,7 +283,15 @@ export default function FilteredCatalog({
               Сбросить фильтры
             </button>
           </div>
-        )}
+        ) : products.length > 0 ? (
+          <InfiniteProductGrid
+            products={products}
+            total={total}
+            hasMore={hasMore}
+            isLoading={isLoading}
+            onLoadMore={loadMore}
+          />
+        ) : null}
       </div>
     </div>
   );
@@ -320,3 +316,4 @@ function FilterTag({
     </span>
   );
 }
+

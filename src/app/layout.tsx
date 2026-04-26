@@ -26,7 +26,7 @@ export const metadata: Metadata = {
     template: "%s | КупитьСтул",
   },
   description:
-    "Интернет-магазин премиальной мебели: стулья, столы, кресла, диваны. Более 5000 товаров. Быстрая доставка по всей России. Гарантия качества.",
+    "Интернет-магазин премиальной мебели: стулья, столы, кресла, диваны. Более 3500 товаров. Быстрая доставка по всей России. Гарантия качества.",
   keywords: [
     "мебель",
     "стулья",
@@ -50,7 +50,7 @@ export const metadata: Metadata = {
     siteName: "КупитьСтул",
     title: "КупитьСтул — Премиальная мебель с доставкой по России",
     description:
-      "Интернет-магазин премиальной мебели: стулья, столы, кресла, диваны. Более 5000 товаров.",
+      "Интернет-магазин премиальной мебели: стулья, столы, кресла, диваны. Более 3500 товаров.",
     images: [
       {
         url: "/og-image.jpg",
@@ -76,10 +76,11 @@ export const metadata: Metadata = {
       "max-snippet": -1,
     },
   },
-  verification: {
-    google: "your-google-verification-code",
-    yandex: "your-yandex-verification-code",
-  },
+  // TODO: Add real verification codes after registering in Google Search Console and Yandex Webmaster
+  // verification: {
+  //   google: "REPLACE_WITH_GOOGLE_VERIFICATION_CODE",
+  //   yandex: "REPLACE_WITH_YANDEX_VERIFICATION_CODE",
+  // },
 };
 
 export default function RootLayout({
