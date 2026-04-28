@@ -14,6 +14,14 @@ services:
       - DATABASE_URL=postgresql://kupitstul:kupitstul_secret@postgres:5432/kupitstul
       - REDIS_URL=redis://redis:6379
       - NEXT_PUBLIC_SITE_URL=https://kupitstul.ru
+      - MAX_BOT_TOKEN=${MAX_BOT_TOKEN:-}
+      - MAX_GROUP_CHAT_ID=${MAX_GROUP_CHAT_ID:-}
+      - MAX_WEBHOOK_URL=${MAX_WEBHOOK_URL:-https://kupitstul.ru/api/chat/webhook}
+      - TG_BOT_TOKEN=${TG_BOT_TOKEN:-}
+      - TG_CHAT_ID=${TG_CHAT_ID:-}
+    volumes:
+      - ./data:/app/data
+      - ./public/uploads:/app/public/uploads
     depends_on:
       postgres:
         condition: service_healthy
