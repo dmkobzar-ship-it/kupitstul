@@ -238,6 +238,10 @@ export function startMaxPoller() {
 
   console.log("🔄 MAX poller started (dev mode — no webhook)");
 
+  // Initialize timestamp to "now" so historical messages are never replayed
+  // on server start. Only messages received AFTER this point will be processed.
+  store.maxLastTimestamp = Date.now();
+
   setInterval(async () => {
     try {
       const res = await fetch(

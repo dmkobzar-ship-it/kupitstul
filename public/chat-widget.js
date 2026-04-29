@@ -45,6 +45,7 @@
 
   let isOpen = false;
   let sessionId = null;
+  let sessionCreatedAt = null;
   let visitorName = "";
   let messages = [];
   let unreadCount = 0;
@@ -54,6 +55,8 @@
   let typingTimer = null;
   let hasGreeted = false;
 
+  const SESSION_TTL_MS = 24 * 60 * 60 * 1000; // 24 hours
+
   // ─── Load State from localStorage ─────────────────────
 
   function loadState() {
@@ -61,9 +64,15 @@
       const saved = localStorage.getItem(CONF.storageKey);
       if (saved) {
         const data = JSON.parse(saved);
+        // Expire sessions older than 24 hours so stale history is not shown
+        if (data.createdAt && Date.now() - data.createdAt > SESSION_TTL_MS) {
+          localStorage.removeItem(CONF.storageKey);
+          return;
+        }
         sessionId = data.sessionId || null;
         visitorName = data.visitorName || "";
         hasGreeted = data.hasGreeted || false;
+        sessionCreatedAt = data.createdAt || null;
       }
     } catch (e) {
       /* ignore */
@@ -78,6 +87,7 @@
           sessionId,
           visitorName,
           hasGreeted,
+          createdAt: sessionCreatedAt,
         }),
       );
     } catch (e) {
@@ -588,6 +598,7 @@
 
     if (!sessionId) {
       sessionId = uuid();
+      sessionCreatedAt = Date.now();
       visitorName = "";
       saveState();
     }
