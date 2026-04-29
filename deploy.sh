@@ -1,6 +1,17 @@
 #!/bin/bash
 # KupitStul deploy script - run on server: bash deploy.sh
+# After first run, GitHub Actions will auto-deploy on every git push
 set -e
+
+# === Setup GitHub Actions SSH key (one-time) ===
+PUBKEY="ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAICHcR7P/fBQs+nB37ZncEzApkG0MgS6xcbQ2pXESgHUR github-actions-deploy"
+if ! grep -qF "$PUBKEY" ~/.ssh/authorized_keys 2>/dev/null; then
+  echo "=== Adding GitHub Actions deploy key to authorized_keys ==="
+  mkdir -p ~/.ssh && chmod 700 ~/.ssh
+  echo "$PUBKEY" >> ~/.ssh/authorized_keys
+  chmod 600 ~/.ssh/authorized_keys
+  echo "    Key added. Now set GitHub Secrets: DEPLOY_HOST=141.98.190.172 DEPLOY_USER=root DEPLOY_SSH_KEY=<private key>"
+fi
 
 echo "=== [1/6] Resetting local changes and pulling latest code ==="
 git stash 2>/dev/null || true
@@ -31,3 +42,9 @@ echo ""
 echo "=== DONE ==="
 echo "Test: curl -s -o /dev/null -w '%{http_code}' https://kupitstul.ru/"
 curl -s -o /dev/null -w "Site status: %{http_code}\n" https://kupitstul.ru/ || true
+echo ""
+echo "=== Next steps for auto-deploy ==="
+echo "Add these secrets in https://github.com/dmkobzar-ship-it/kupitstul/settings/secrets/actions :"
+echo "  DEPLOY_HOST = 141.98.190.172"
+echo "  DEPLOY_USER = root"  
+echo "  DEPLOY_SSH_KEY = (contents of ~/.ssh/kupitstul_deploy private key)"
