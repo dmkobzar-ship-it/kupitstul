@@ -26,8 +26,10 @@ COMMANDS = [
     "--filter 'label=com.docker.compose.service=app' | xargs -r docker rm -f 2>&1 || true",
     # Start container (no build needed - image already built)
     f"cd {DEPLOY_DIR} && docker-compose up --no-build -d app 2>&1",
-    # Reload nginx to pick up any nginx.conf changes (no downtime)
-    "docker exec kupitstul_nginx_1 nginx -s reload 2>&1 || true",
+    # Restart nginx to pick up any nginx.conf changes
+    # (docker bind-mount of a single file uses inode; git pull replaces the inode,
+    # so nginx -s reload reads stale content — a full restart re-opens the file)
+    "docker restart kupitstul_nginx_1 2>&1 || true",
     # Wait for app to start
     "sleep 8",
     # Check logs
