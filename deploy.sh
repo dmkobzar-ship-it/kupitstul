@@ -21,16 +21,22 @@ git pull origin main
 echo "=== [2/6] Stopping containers ==="
 docker-compose down --remove-orphans 2>/dev/null || true
 
-echo "=== [3/6] Building and starting (no cache) ==="
-docker-compose up -d --build --no-cache
+echo "=== [3/6] Building image (no cache) ==="
+docker-compose build --no-cache
 
-echo "=== [4/6] Waiting for app to be ready (40s) ==="
-sleep 40
+echo "=== [4/6] Starting containers ==="
+docker-compose up -d
 
-echo "=== [5/6] Running prisma db push ==="
-CONTAINER=$(docker ps --format '{{.Names}}' | grep 'app' | head -1)
-echo "Container: $CONTAINER"
-docker exec "$CONTAINER" ./node_modules/.bin/prisma db push --schema=./prisma/schema.prisma --accept-data-loss
+echo "=== [4/5] Waiting for app to be ready (50s) ==="
+sleep 50
+
+echo "=== [5/5] Running prisma db push ==="
+CONTAINER=$(docker-compose ps -q app 2>/dev/null | head -1)
+if [ -z "$CONTAINER" ]; then
+  CONTAINER=$(docker ps --format '{{.ID}} {{.Names}}' | grep -i 'app\|kupitstul' | awk '{print $1}' | head -1)
+fi
+echo "Container ID: $CONTAINER"
+docker exec "$CONTAINER" sh -c "cd /app && node_modules/.bin/prisma db push --schema=./prisma/schema.prisma --accept-data-loss"
 
 echo "=== [6/6] Checking status ==="
 docker ps
