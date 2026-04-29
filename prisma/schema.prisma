@@ -113,7 +113,6 @@ model Product {
   @@index([status])
   @@index([inStock])
   @@index([avitoId])
-  @@fulltext([name, description])
 }
 
 // ==========================================
@@ -188,6 +187,7 @@ model Order {
 
   // Items
   cartItems Json @default("[]") // Cart snapshot: [{productId, name, price, quantity, image, slug, total}]
+  orderItems OrderItem[]
 
   // Pricing
   subtotal      Float
