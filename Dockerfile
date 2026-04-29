@@ -16,8 +16,8 @@ WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 
-# Generate Prisma client (dummy DATABASE_URL needed only for schema validation, not actual DB)
-RUN DATABASE_URL="postgresql://x:x@x:5432/x" npx prisma generate
+# Generate Prisma client
+RUN npx prisma generate 2>/dev/null || true
 
 # Build Next.js
 ENV NEXT_TELEMETRY_DISABLED=1
@@ -41,8 +41,10 @@ COPY --from=builder /app/.next/standalone ./
 COPY --from=builder /app/.next/static ./.next/static
 COPY --from=builder /app/prisma ./prisma
 COPY --from=builder /app/data ./data
-# Copy Prisma CLI so we can run db push on startup
+# Copy Prisma CLI + engines so we can run db push
 COPY --from=builder /app/node_modules/prisma ./node_modules/prisma
+COPY --from=builder /app/node_modules/@prisma ./node_modules/@prisma
+COPY --from=builder /app/node_modules/.prisma ./node_modules/.prisma
 COPY --from=builder /app/node_modules/.bin/prisma ./node_modules/.bin/prisma
 
 USER nextjs
