@@ -76,8 +76,8 @@ export async function maxSendMessage(
   let url: string;
   let bodyData: object;
   if (isGroup) {
-    url = `${MAX_API}/messages`;
-    bodyData = { recipient: { chat_id: parseInt(chatIdStr, 10) }, text };
+    url = `${MAX_API}/messages?chat_id=${chatIdStr}`;
+    bodyData = { text };
   } else {
     url = `${MAX_API}/messages?user_id=${chatIdStr}`;
     bodyData = { text };
