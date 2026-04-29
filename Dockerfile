@@ -1,3 +1,4 @@
+# syntax=docker/dockerfile:1
 # KupitStul.ru - Production Dockerfile
 # Multi-stage build for Next.js
 
@@ -7,7 +8,8 @@ RUN apk add --no-cache libc6-compat openssl
 WORKDIR /app
 
 COPY package.json package-lock.json* ./
-RUN npm ci && npm cache clean --force
+RUN --mount=type=cache,id=kupitstul-npm,target=/root/.npm \
+    npm ci
 
 # ---- Builder ----
 FROM node:20-alpine AS builder
@@ -19,10 +21,11 @@ COPY . .
 # Generate Prisma client (with correct binary targets from schema.prisma)
 RUN npx prisma generate
 
-# Build Next.js
+# Build Next.js (cache mount preserves webpack cache between builds)
 ENV NEXT_TELEMETRY_DISABLED=1
 ENV NODE_ENV=production
-RUN npm run build
+RUN --mount=type=cache,id=kupitstul-nextjs,target=/app/.next/cache \
+    npm run build
 
 # ---- Runner ----
 FROM node:20-alpine AS runner
