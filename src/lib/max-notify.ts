@@ -12,16 +12,12 @@ import { HttpsProxyAgent } from "https-proxy-agent";
 
 const MAX_API = "https://platform-api.max.ru";
 
-function getProxyAgent(): HttpsProxyAgent<string> {
-  const proxy =
-    process.env.HTTPS_PROXY ||
-    process.env.https_proxy ||
-    "http://127.0.0.1:12334";
-  return new HttpsProxyAgent(proxy);
-}
-
 function maxFetch(url: string, options: RequestInit = {}): Promise<Response> {
-  return fetch(url, { ...options, agent: getProxyAgent() } as any);
+  const proxy = process.env.HTTPS_PROXY || process.env.https_proxy;
+  if (proxy) {
+    return fetch(url, { ...options, agent: new HttpsProxyAgent(proxy) } as any);
+  }
+  return fetch(url, options);
 }
 
 function getToken(): string | null {
@@ -30,12 +26,13 @@ function getToken(): string | null {
   return t;
 }
 
-function getUserId(): number | null {
-  // Читаем каждый раз свежо из process.env
-  const id = process.env.MAX_USER_ID || process.env.MAX_CHAT_ID;
+function getChatId(): string | null {
+  const id =
+    process.env.MAX_GROUP_CHAT_ID ||
+    process.env.MAX_CHAT_ID ||
+    process.env.MAX_USER_ID;
   if (!id || id === "ВАШ_CHAT_ID") return null;
-  const n = Number(id);
-  return isNaN(n) ? null : n;
+  return id;
 }
 
 /** Проверяет токен бота — GET /me */
@@ -61,24 +58,38 @@ export async function maxGetUpdates(): Promise<any> {
   return res.json();
 }
 
-/** Отправляет текстовое сообщение пользователю */
+/** Отправляет текстовое сообщение в чат (личный или групповой) */
 export async function maxSendMessage(
   text: string,
-  userId?: number,
+  chatId?: string | number,
 ): Promise<any> {
   const token = getToken();
   if (!token) throw new Error("MAX_BOT_TOKEN не задан в .env.local");
 
-  const targetUserId = userId ?? getUserId();
-  if (!targetUserId) throw new Error("MAX_USER_ID не задан в .env.local");
+  const targetChatId = chatId ?? getChatId();
+  if (!targetChatId) throw new Error("MAX_GROUP_CHAT_ID не задан в env");
 
-  const res = await maxFetch(`${MAX_API}/messages?user_id=${targetUserId}`, {
+  const chatIdStr = String(targetChatId);
+  const isGroup = chatIdStr.startsWith("-") || chatIdStr.length > 15;
+
+  // Групповой чат — chat_id в теле запроса, личный — user_id в query
+  let url: string;
+  let bodyData: object;
+  if (isGroup) {
+    url = `${MAX_API}/messages`;
+    bodyData = { recipient: { chat_id: chatIdStr }, text, format: "markdown" };
+  } else {
+    url = `${MAX_API}/messages?user_id=${chatIdStr}`;
+    bodyData = { text, format: "markdown" };
+  }
+
+  const res = await maxFetch(url, {
     method: "POST",
     headers: {
       Authorization: token,
       "Content-Type": "application/json",
     },
-    body: JSON.stringify({ text, format: "markdown" }),
+    body: JSON.stringify(bodyData),
   });
 
   if (!res.ok) {
@@ -103,14 +114,14 @@ export interface OrderData {
 /** Формирует и отправляет уведомление о новом заказе */
 export async function sendOrderNotification(data: OrderData): Promise<void> {
   const token = getToken();
-  const userId = getUserId();
+  const chatId = getChatId();
 
   if (!token) {
     console.log("⚠️  MAX_BOT_TOKEN не задан — уведомление пропущено");
     return;
   }
-  if (!userId) {
-    console.log("⚠️  MAX_USER_ID не задан — уведомление пропущено");
+  if (!chatId) {
+    console.log("⚠️  MAX_GROUP_CHAT_ID не задан — уведомление пропущено");
     return;
   }
 
