@@ -100,7 +100,6 @@ model Product {
   reviewCount Int    @default(0)
 
   // Relations
-  orderItems OrderItem[]
   reviews    Review[]
   variants   ProductVariant[]
 
@@ -114,7 +113,6 @@ model Product {
   @@index([status])
   @@index([inStock])
   @@index([avitoId])
-  @@fulltext([name, description])
 }
 
 // ==========================================
@@ -189,6 +187,7 @@ model Order {
 
   // Items
   cartItems Json @default("[]") // Cart snapshot: [{productId, name, price, quantity, image, slug, total}]
+  items     OrderItem[]
 
   // Pricing
   subtotal      Float
@@ -231,7 +230,6 @@ model OrderItem {
   orderId   String
   order     Order  @relation(fields: [orderId], references: [id], onDelete: Cascade)
   productId String
-  product   Product @relation(fields: [productId], references: [id])
 
   // Snapshot at time of order
   productName  String
