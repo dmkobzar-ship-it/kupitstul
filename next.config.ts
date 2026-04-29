@@ -23,21 +23,6 @@ const nextConfig: NextConfig = {
     optimizePackageImports: ["lucide-react"],
   },
 
-  // Exclude large native binaries from standalone file tracing (speeds up build 2-3x)
-  outputFileTracingExcludes: {
-    "*": [
-      "./node_modules/@swc/**",
-      "./node_modules/esbuild/**",
-      "./node_modules/webpack/**",
-      "./node_modules/terser/**",
-      "./node_modules/typescript/**",
-      "./node_modules/prettier/**",
-      "./node_modules/@next/swc-*/**",
-      "./node_modules/rollup/**",
-      "./node_modules/jest*/**",
-    ],
-  },
-
   // Security + performance headers
   async headers() {
     return [
