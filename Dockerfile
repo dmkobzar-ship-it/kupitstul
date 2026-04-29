@@ -16,8 +16,8 @@ WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 
-# Generate Prisma client
-RUN npx prisma generate 2>/dev/null || true
+# Generate Prisma client (with correct binary targets from schema.prisma)
+RUN npx prisma generate
 
 # Build Next.js
 ENV NEXT_TELEMETRY_DISABLED=1
@@ -46,6 +46,10 @@ COPY --from=builder /app/node_modules/prisma ./node_modules/prisma
 COPY --from=builder /app/node_modules/@prisma ./node_modules/@prisma
 COPY --from=builder /app/node_modules/.prisma ./node_modules/.prisma
 COPY --from=builder /app/node_modules/.bin/prisma ./node_modules/.bin/prisma
+
+# Fix permissions for Next.js cache writes and Prisma
+RUN chown -R nextjs:nodejs /app/.next 2>/dev/null || true
+RUN chown -R nextjs:nodejs /app/node_modules/.prisma 2>/dev/null || true
 
 USER nextjs
 
