@@ -72,15 +72,15 @@ export async function maxSendMessage(
   const chatIdStr = String(targetChatId);
   const isGroup = chatIdStr.startsWith("-") || chatIdStr.length > 15;
 
-  // Групповой чат — chat_id в теле запроса, личный — user_id в query
+  // Групповой чат — chat_id в теле запроса (integer), личный — user_id в query
   let url: string;
   let bodyData: object;
   if (isGroup) {
     url = `${MAX_API}/messages`;
-    bodyData = { recipient: { chat_id: chatIdStr }, text, format: "markdown" };
+    bodyData = { recipient: { chat_id: parseInt(chatIdStr, 10) }, text };
   } else {
     url = `${MAX_API}/messages?user_id=${chatIdStr}`;
-    bodyData = { text, format: "markdown" };
+    bodyData = { text };
   }
 
   const res = await maxFetch(url, {
