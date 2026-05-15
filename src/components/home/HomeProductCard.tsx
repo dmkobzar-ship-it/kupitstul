@@ -28,19 +28,23 @@ export default function HomeProductCard({ product }: HomeProductCardProps) {
   const { addToCart } = useCart();
   const isFav = isFavorite(product.id);
 
-  const imageSrc =
-    imageError || !product.images?.[0]
-      ? `https://picsum.photos/seed/${product.id}/400/400`
-      : product.images[0].includes("avito.st")
-        ? `/api/img?url=${encodeURIComponent(product.images[0])}`
-        : product.images[0];
+  const rawImage = imageError || !product.images?.[0] ? null : product.images[0];
+  // Route all external URLs through /api/img to fix:
+  //   • mixed content (http:// images blocked on https:// page)
+  //   • Avito hotlink blocking
+  const imageSrc = rawImage
+    ? rawImage.startsWith("http")
+      ? `/api/img?url=${encodeURIComponent(rawImage)}`
+      : rawImage
+    : `https://picsum.photos/seed/${product.id}/400/400`;
+  const isAvito = rawImage?.includes("avito.st") ?? false;
 
   return (
     <Link
       href={`/catalog/product/${product.slug}`}
       className="product-card group"
     >
-      <div className={`product-image${imageSrc.includes("avito") ? " avito-badge" : ""}`}>
+        <div className={`product-image${isAvito ? " avito-badge" : ""}`}>
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
           src={imageSrc}

@@ -33,6 +33,12 @@ export default function RelatedProducts({ products }: RelatedProductsProps) {
 function RelatedProductCard({ product }: { product: RelatedProduct }) {
   const [imageError, setImageError] = useState(false);
   const relatedImage = product.images?.[0] || "";
+  // Route all external URLs through /api/img to avoid mixed content (http on https)
+  const imageSrc = imageError || !relatedImage
+    ? "https://via.placeholder.com/200x200?text=Нет+фото"
+    : relatedImage.startsWith("http")
+      ? `/api/img?url=${encodeURIComponent(relatedImage)}`
+      : relatedImage;
 
   return (
     <Link
@@ -44,11 +50,7 @@ function RelatedProductCard({ product }: { product: RelatedProduct }) {
       >
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
-          src={
-            imageError || !relatedImage
-              ? "https://via.placeholder.com/200x200?text=Нет+фото"
-              : relatedImage
-          }
+          src={imageSrc}
           alt={product.name}
           className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
           onError={() => setImageError(true)}
