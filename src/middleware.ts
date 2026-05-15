@@ -1,14 +1,21 @@
 import { NextRequest, NextResponse } from "next/server";
 
+// Reject requests that try to bypass Next.js middleware (CVE-2025-29927)
+const MIDDLEWARE_BYPASS_HEADER = "x-middleware-subrequest";
+
 function hasValidSession(request: NextRequest): boolean {
   const sessionToken = request.cookies.get("admin_session")?.value;
-  if (sessionToken) return true;
-  const authHeader = request.headers.get("authorization");
-  if (authHeader) return true;
+  // Token must be a non-empty base64 string (at least 8 chars)
+  if (sessionToken && sessionToken.length >= 8) return true;
   return false;
 }
 
 export function middleware(request: NextRequest) {
+  // Block CVE-2025-29927 middleware bypass attempts
+  if (request.headers.has(MIDDLEWARE_BYPASS_HEADER)) {
+    return new NextResponse("Forbidden", { status: 403 });
+  }
+
   const { pathname } = request.nextUrl;
 
   // Protect admin pages (except login)
@@ -59,5 +66,12 @@ export function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/admin/:path*", "/api/admin/:path*", "/api/upload", "/api/orders"],
+  matcher: [
+    "/admin/:path*",
+    "/api/admin/:path*",
+    "/api/upload",
+    "/api/upload-file",
+    "/api/import/:path*",
+    "/api/orders",
+  ],
 };

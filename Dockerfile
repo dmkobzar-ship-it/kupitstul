@@ -37,6 +37,12 @@ ENV NEXT_TELEMETRY_DISABLED=1
 # Install openssl for Prisma engine
 RUN apk add --no-cache openssl
 
+# Remove shell utilities that could be weaponised (wget, curl, ash, sh)
+# node server.js does NOT need them at runtime
+RUN rm -f /usr/bin/wget /usr/bin/curl /bin/ash /bin/sh /usr/bin/nc \
+          /usr/bin/ncat /usr/bin/netcat /usr/bin/nmap \
+    || true
+
 # Create non-root user
 RUN addgroup --system --gid 1001 nodejs
 RUN adduser --system --uid 1001 nextjs
