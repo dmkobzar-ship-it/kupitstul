@@ -28,7 +28,7 @@ export default function InfiniteProductGrid({
           onLoadMore();
         }
       },
-      { threshold: 0.1, rootMargin: "100px" },
+      { threshold: 0.1, rootMargin: "400px" },
     );
 
     if (loaderRef.current) {

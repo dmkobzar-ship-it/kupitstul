@@ -2,20 +2,28 @@
  * Admin Authentication Middleware
  * Basic HTTP auth for admin routes
  *
- * Set environment variables:
- *   ADMIN_USERNAME (default: admin)
- *   ADMIN_PASSWORD (default: kupitstul2025)
+ * Required environment variables (NO defaults — must be set explicitly):
+ *   ADMIN_USERNAME  — admin panel login
+ *   ADMIN_PASSWORD  — admin panel password
  */
 
 import { NextRequest, NextResponse } from "next/server";
 
-const ADMIN_USERNAME = process.env.ADMIN_USERNAME || "admin";
-const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || "kupitstul2025";
+const ADMIN_USERNAME = process.env.ADMIN_USERNAME;
+const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD;
+
+if (!ADMIN_USERNAME || !ADMIN_PASSWORD) {
+  console.error(
+    "[SECURITY] ADMIN_USERNAME and ADMIN_PASSWORD env vars must be set — admin access disabled!",
+  );
+}
 
 /**
  * Check if request has valid admin credentials
  */
 export function isAuthenticated(request: NextRequest): boolean {
+  if (!ADMIN_USERNAME || !ADMIN_PASSWORD) return false;
+
   const authHeader = request.headers.get("authorization");
 
   if (!authHeader || !authHeader.startsWith("Basic ")) {
@@ -69,6 +77,8 @@ export function requireAdmin(request: NextRequest): NextResponse | null {
  * Returns true if user has valid admin session
  */
 export function hasAdminSession(request: NextRequest): boolean {
+  if (!ADMIN_USERNAME) return false;
+
   const sessionToken = request.cookies.get("admin_session")?.value;
   if (!sessionToken) return false;
 
@@ -85,8 +95,9 @@ export function hasAdminSession(request: NextRequest): boolean {
  * Create an admin session token
  */
 export function createAdminSession(): string {
+  const name = ADMIN_USERNAME ?? "admin";
   const token = Buffer.from(
-    `${ADMIN_USERNAME}:${Date.now().toString().slice(0, 8)}`,
+    `${name}:${Date.now().toString().slice(0, 8)}`,
   ).toString("base64");
   return token;
 }

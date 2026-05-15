@@ -18,9 +18,19 @@ export async function POST(request: NextRequest) {
     }
 
     // Sanitize extension: strip path separators, allow only safe image extensions
-    const rawExt = path.extname(file.name).replace(/[^a-zA-Z0-9.]/g, "").toLowerCase();
+    const rawExt = path
+      .extname(file.name)
+      .replace(/[^a-zA-Z0-9.]/g, "")
+      .toLowerCase();
     // SVG excluded — can contain embedded scripts (XSS/content injection)
-    const ALLOWED_EXT = new Set([".jpg", ".jpeg", ".png", ".gif", ".webp", ".avif"]);
+    const ALLOWED_EXT = new Set([
+      ".jpg",
+      ".jpeg",
+      ".png",
+      ".gif",
+      ".webp",
+      ".avif",
+    ]);
     const ext = ALLOWED_EXT.has(rawExt) ? rawExt : ".jpg";
     const filename = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}${ext}`;
 

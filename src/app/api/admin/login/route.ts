@@ -4,7 +4,9 @@ const ADMIN_USERNAME = process.env.ADMIN_USERNAME;
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD;
 
 if (!ADMIN_USERNAME || !ADMIN_PASSWORD) {
-  console.error("[SECURITY] ADMIN_USERNAME and ADMIN_PASSWORD env vars must be set!");
+  console.error(
+    "[SECURITY] ADMIN_USERNAME and ADMIN_PASSWORD env vars must be set!",
+  );
 }
 
 /**

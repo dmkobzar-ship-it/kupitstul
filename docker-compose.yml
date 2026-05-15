@@ -11,7 +11,7 @@ services:
       - "3000:3000"
     environment:
       - NODE_ENV=production
-      - DATABASE_URL=postgresql://kupitstul:kupitstul_secret@postgres:5432/kupitstul
+      - DATABASE_URL=postgresql://kupitstul:${POSTGRES_PASSWORD:-kupitstul_secret}@postgres:5432/kupitstul
       - REDIS_URL=redis://redis:6379
       - NEXT_PUBLIC_SITE_URL=https://kupitstul.ru
       - MAX_BOT_TOKEN=${MAX_BOT_TOKEN:-}
@@ -25,6 +25,7 @@ services:
     volumes:
       - ./data:/app/data
       - ./public/uploads:/app/public/uploads
+      - img_cache:/app/img-cache
     # --- Security hardening ---
     tmpfs:
       - /tmp:size=64m,mode=1777,noexec,nosuid,nodev
@@ -49,7 +50,7 @@ services:
       - "5432:5432"
     environment:
       POSTGRES_USER: kupitstul
-      POSTGRES_PASSWORD: kupitstul_secret
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-kupitstul_secret}
       POSTGRES_DB: kupitstul
     volumes:
       - postgres_data:/var/lib/postgresql/data
@@ -98,6 +99,7 @@ services:
 volumes:
   postgres_data:
   redis_data:
+  img_cache:
 
 networks:
   kupitstul-network:

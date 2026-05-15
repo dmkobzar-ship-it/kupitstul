@@ -65,45 +65,16 @@ export default function ProductCard({ product }: ProductCardProps) {
   const categorySlug = product.category || "stulya";
   const categoryName = categoryNames[categorySlug] || "Товары";
 
-  // Плейсхолдеры по категориям с Unsplash
-  const categorySearchTerms: Record<string, string> = {
-    "barnye-stulya": "bar-stool",
-    stulya: "chair",
-    stoly: "dining-table",
-    kresla: "armchair",
-    "kompyuternye-kresla": "office-chair",
-    komody: "dresser",
-    stellazhi: "shelf",
-    shkafy: "wardrobe",
-    tumby: "nightstand",
-    "tumby-tv": "tv-stand",
-    pufy: "ottoman",
-    default: "furniture",
-  };
-
-  // Генерируем плейсхолдер изображение (только при ошибке загрузки)
-  const getPlaceholderUrl = (index: number): string => {
-    const searchTerm =
-      categorySearchTerms[categorySlug] || categorySearchTerms["default"];
-    const seed =
-      Math.abs(parseInt(product.id.replace(/\D/g, "").slice(0, 6) || "1")) +
-      index;
-    return `https://picsum.photos/seed/${searchTerm}${seed}/400/400`;
-  };
-
-  // Получаем URL изображения - оригинал или плейсхолдер при ошибке
+  // Все изображения проксируются через /api/img:
+  // - Avito: hotlink-блокировка + нужен watermark
+  // - red-black.ru, tetchair.ru, millargo.ru: HTTP-ресурсы → mixed content на HTTPS
+  // - Единая точка: server-side кеш, без CORS/блокировок Роскомнадзора
   const getImageUrl = (index: number): string => {
     const originalUrl = allImages[index];
-    // Если есть оригинальный URL и он не вызвал ошибку - используем его
     if (originalUrl && !imageErrors.has(index)) {
-      // Avito CDN блокирует hotlinking — проксируем через /api/img
-      if (originalUrl.includes("avito.st")) {
-        return `/api/img?url=${encodeURIComponent(originalUrl)}`;
-      }
-      return originalUrl;
+      return `/api/img?url=${encodeURIComponent(originalUrl)}`;
     }
-    // Плейсхолдер только при ошибке загрузки
-    return getPlaceholderUrl(index);
+    return "/images/no-photo.svg";
   };
 
   // Для отображения используем минимум 1 изображение, максимум 5

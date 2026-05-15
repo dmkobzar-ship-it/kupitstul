@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400" fill="none">
+  <rect width="400" height="400" fill="#F3F4F6"/>
+  <rect x="30" y="60" width="340" height="260" rx="12" fill="#E5E7EB"/>
+  <circle cx="155" cy="170" r="38" fill="#D1D5DB"/>
+  <path d="M70 330 L140 230 L195 295 L255 210 L330 330 Z" fill="#D1D5DB"/>
+  <line x1="30" y1="60" x2="370" y2="320" stroke="#D1D5DB" stroke-width="2"/>
+  <line x1="370" y1="60" x2="30" y2="320" stroke="#D1D5DB" stroke-width="2"/>
+  <text x="200" y="375" text-anchor="middle" font-family="Arial,sans-serif" font-size="15" fill="#9CA3AF">Фото недоступно</text>
+</svg>

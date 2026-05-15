@@ -2,6 +2,16 @@ import { NextRequest, NextResponse } from "next/server";
 import sharp from "sharp";
 import fs from "fs";
 import path from "path";
+import crypto from "crypto";
+
+// Server-side image cache — processes each URL only once per container lifetime
+// Stored in /app/img-cache (Docker named volume, persists across deploys)
+const CACHE_DIR = path.join(process.cwd(), "img-cache");
+try {
+  fs.mkdirSync(CACHE_DIR, { recursive: true });
+} catch {
+  // If dir is not writable — proceed without caching
+}
 
 // Preload overlay image once at startup
 const OVERLAY_BUF: Buffer | null = (() => {
@@ -23,6 +33,10 @@ const ALLOWED_HOSTNAMES = new Set([
   "www.red-black.ru",
   "red-black.ru",
   "content.tetchair.ru",
+  "tetchair.ru",
+  "price.tetchair.ru",
+  "millargo.ru",
+  "www.millargo.ru",
   "splitavia.ru",
 ]);
 
@@ -58,6 +72,24 @@ export async function GET(req: NextRequest) {
     return new NextResponse("URL not allowed", { status: 403 });
   }
 
+  // Serve from disk cache if already processed (instant, no Avito roundtrip)
+  const cacheKey = crypto.createHash("sha256").update(url).digest("hex");
+  const cachePath = path.join(CACHE_DIR, `${cacheKey}.webp`);
+  try {
+    if (fs.existsSync(cachePath)) {
+      const cached = fs.readFileSync(cachePath);
+      return new NextResponse(new Uint8Array(cached), {
+        headers: {
+          "Content-Type": "image/webp",
+          "Cache-Control": "public, max-age=604800, stale-while-revalidate=86400",
+          "X-Cache": "HIT",
+        },
+      });
+    }
+  } catch {
+    // Cache read failed — proceed to fetch fresh
+  }
+
   let imageBuffer: Buffer;
   try {
     const res = await fetch(url, {
@@ -75,14 +107,26 @@ export async function GET(req: NextRequest) {
     return new NextResponse("Image fetch error", { status: 502 });
   }
 
-  // For non-Avito sources — return image as-is, no overlay
+  // For non-Avito sources — convert to WebP for uniform caching
   if (!isAvitoUrl(url) || !OVERLAY_BUF) {
-    return new NextResponse(new Uint8Array(imageBuffer), {
-      headers: {
-        "Content-Type": "image/jpeg",
-        "Cache-Control": "public, max-age=86400, stale-while-revalidate=3600",
-      },
-    });
+    try {
+      const webp = await sharp(imageBuffer).webp({ quality: 85 }).toBuffer();
+      try { fs.writeFileSync(cachePath, webp); } catch {}
+      return new NextResponse(new Uint8Array(webp), {
+        headers: {
+          "Content-Type": "image/webp",
+          "Cache-Control": "public, max-age=604800, stale-while-revalidate=86400",
+        },
+      });
+    } catch {
+      // sharp failed (corrupted / non-image) — return original bytes uncached
+      return new NextResponse(new Uint8Array(imageBuffer), {
+        headers: {
+          "Content-Type": "image/jpeg",
+          "Cache-Control": "public, max-age=604800, stale-while-revalidate=86400",
+        },
+      });
+    }
   }
 
   // Avito image — overlay заглушка.jpeg in bottom-right corner
@@ -110,10 +154,13 @@ export async function GET(req: NextRequest) {
       .webp({ quality: 82 })
       .toBuffer();
 
+    // Save processed image to cache for instant future responses
+    try { fs.writeFileSync(cachePath, processed); } catch {}
+
     return new NextResponse(new Uint8Array(processed), {
       headers: {
         "Content-Type": "image/webp",
-        "Cache-Control": "public, max-age=86400, stale-while-revalidate=3600",
+        "Cache-Control": "public, max-age=604800, stale-while-revalidate=86400",
       },
     });
   } catch {

@@ -59,6 +59,8 @@ COPY --from=builder /app/node_modules/.bin/prisma ./node_modules/.bin/prisma
 # Fix permissions for Next.js cache writes and Prisma
 RUN chown -R nextjs:nodejs /app/.next 2>/dev/null || true
 RUN chown -R nextjs:nodejs /app/node_modules/.prisma 2>/dev/null || true
+# Create image cache dir (Docker volume will be seeded from this dir on first run)
+RUN mkdir -p /app/img-cache && chown nextjs:nodejs /app/img-cache
 
 # Remove shell utilities that could be weaponised (wget, curl, ash, sh).
 # Must be the LAST RUN — Docker itself needs /bin/sh for every RUN step above.

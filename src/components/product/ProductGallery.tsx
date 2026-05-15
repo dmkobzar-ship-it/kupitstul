@@ -21,38 +21,15 @@ export default function ProductGallery({
   const [imageErrors, setImageErrors] = useState<Set<number>>(new Set());
   const [isZoomed, setIsZoomed] = useState(false);
 
-  // Генерируем плейсхолдер (только при ошибке загрузки)
-  const getPlaceholderUrl = (index: number, size: number = 600): string => {
-    const seed =
-      Math.abs(parseInt(productId.replace(/\D/g, "").slice(0, 6) || "1")) +
-      index;
-    return `https://picsum.photos/seed/${seed}/${size}/${size}`;
-  };
-
-  // Получаем URL изображения - оригинал или плейсхолдер при ошибке
-  const getImageUrl = (index: number, size: number = 600): string => {
-    const originalUrl = images[index];
-    // Если есть оригинальный URL и он не вызвал ошибку - используем его
-    if (originalUrl && !imageErrors.has(index)) {
-      return originalUrl;
-    }
-    // Плейсхолдер только при ошибке загрузки
-    return getPlaceholderUrl(index, size);
-  };
-
-  // Proxy helper: routes Avito-hosted images through /api/img to hide the Avito watermark
-  const proxyImageUrl = (url: string): string => {
-    if (url.includes("avito.st")) {
-      return `/api/img?url=${encodeURIComponent(url)}`;
-    }
-    return url;
-  };
-
-  // Массив изображений (минимум 1, максимум 10)
+  // Все изображения проксируются через /api/img (mixed-content + hotlink fix)
   const imageCount = Math.max(1, Math.min(images.length || 1, 10));
-  const displayImages = Array.from({ length: imageCount }, (_, i) =>
-    proxyImageUrl(getImageUrl(i)),
-  );
+  const displayImages = Array.from({ length: imageCount }, (_, i) => {
+    const original = images[i];
+    if (original && !imageErrors.has(i)) {
+      return `/api/img?url=${encodeURIComponent(original)}`;
+    }
+    return "/images/no-photo.svg";
+  });
   const hasMultipleImages = displayImages.length > 1;
 
   const handleImageError = (index: number) => {
