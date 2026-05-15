@@ -37,12 +37,6 @@ ENV NEXT_TELEMETRY_DISABLED=1
 # Install openssl for Prisma engine
 RUN apk add --no-cache openssl
 
-# Remove shell utilities that could be weaponised (wget, curl, ash, sh)
-# node server.js does NOT need them at runtime
-RUN rm -f /usr/bin/wget /usr/bin/curl /bin/ash /bin/sh /usr/bin/nc \
-          /usr/bin/ncat /usr/bin/netcat /usr/bin/nmap \
-    || true
-
 # Create non-root user
 RUN addgroup --system --gid 1001 nodejs
 RUN adduser --system --uid 1001 nextjs
@@ -62,6 +56,12 @@ COPY --from=builder /app/node_modules/.bin/prisma ./node_modules/.bin/prisma
 # Fix permissions for Next.js cache writes and Prisma
 RUN chown -R nextjs:nodejs /app/.next 2>/dev/null || true
 RUN chown -R nextjs:nodejs /app/node_modules/.prisma 2>/dev/null || true
+
+# Remove shell utilities that could be weaponised (wget, curl, ash, sh).
+# Must be the LAST RUN — Docker itself needs /bin/sh for every RUN step above.
+# node server.js does NOT need a shell at runtime.
+RUN rm -f /usr/bin/wget /usr/bin/curl /bin/ash /bin/sh /usr/bin/nc \
+          /usr/bin/ncat /usr/bin/netcat 2>/dev/null || true
 
 USER nextjs
 
