@@ -21,6 +21,7 @@ services:
       - TG_CHAT_ID=${TG_CHAT_ID:-}
       - ADMIN_USERNAME=${ADMIN_USERNAME}
       - ADMIN_PASSWORD=${ADMIN_PASSWORD}
+      - PRISMA_QUERY_ENGINE_LIBRARY=/app/node_modules/.prisma/client/libquery_engine-linux-musl-openssl-3.0.x.so.node
     volumes:
       - ./data:/app/data
       - ./public/uploads:/app/public/uploads
