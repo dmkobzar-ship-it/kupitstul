@@ -110,7 +110,17 @@ function generateSlug(name, id) {
     .map((c) => translitMap[c] || c)
     .join("");
   slug = slug.replace(/[^a-z0-9-]/g, "").substring(0, 50);
-  return slug + "-" + String(id).substring(0, 8);
+  // Transliterate ID so suffix is always ASCII (avoids Cyrillic in slug)
+  const idSlug = String(id)
+    .toLowerCase()
+    .split("")
+    .map((c) => translitMap[c] || c)
+    .join("")
+    .replace(/[^a-z0-9-]/g, "-")
+    .replace(/-+/g, "-")
+    .replace(/^-|-$/g, "")
+    .substring(0, 15);
+  return slug + "-" + idSlug;
 }
 
 function parseColor(colorName) {

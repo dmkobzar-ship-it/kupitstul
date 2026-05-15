@@ -34,11 +34,12 @@ function RelatedProductCard({ product }: { product: RelatedProduct }) {
   const [imageError, setImageError] = useState(false);
   const relatedImage = product.images?.[0] || "";
   // Route all external URLs through /api/img to avoid mixed content (http on https)
-  const imageSrc = imageError || !relatedImage
-    ? "https://via.placeholder.com/200x200?text=Нет+фото"
-    : relatedImage.startsWith("http")
-      ? `/api/img?url=${encodeURIComponent(relatedImage)}`
-      : relatedImage;
+  const imageSrc =
+    imageError || !relatedImage
+      ? "https://via.placeholder.com/200x200?text=Нет+фото"
+      : relatedImage.startsWith("http")
+        ? `/api/img?url=${encodeURIComponent(relatedImage)}`
+        : relatedImage;
 
   return (
     <Link

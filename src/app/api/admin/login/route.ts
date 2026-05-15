@@ -40,7 +40,10 @@ export async function POST(request: NextRequest) {
 
   if (!checkRateLimit(ip)) {
     return NextResponse.json(
-      { success: false, error: "Слишком много попыток. Попробуйте через 15 минут." },
+      {
+        success: false,
+        error: "Слишком много попыток. Попробуйте через 15 минут.",
+      },
       { status: 429, headers: { "Retry-After": "900" } },
     );
   }

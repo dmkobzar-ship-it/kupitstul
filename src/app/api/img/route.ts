@@ -81,7 +81,8 @@ export async function GET(req: NextRequest) {
       return new NextResponse(new Uint8Array(cached), {
         headers: {
           "Content-Type": "image/webp",
-          "Cache-Control": "public, max-age=604800, stale-while-revalidate=86400",
+          "Cache-Control":
+            "public, max-age=604800, stale-while-revalidate=86400",
           "X-Cache": "HIT",
         },
       });
@@ -111,11 +112,14 @@ export async function GET(req: NextRequest) {
   if (!isAvitoUrl(url) || !OVERLAY_BUF) {
     try {
       const webp = await sharp(imageBuffer).webp({ quality: 85 }).toBuffer();
-      try { fs.writeFileSync(cachePath, webp); } catch {}
+      try {
+        fs.writeFileSync(cachePath, webp);
+      } catch {}
       return new NextResponse(new Uint8Array(webp), {
         headers: {
           "Content-Type": "image/webp",
-          "Cache-Control": "public, max-age=604800, stale-while-revalidate=86400",
+          "Cache-Control":
+            "public, max-age=604800, stale-while-revalidate=86400",
         },
       });
     } catch {
@@ -123,7 +127,8 @@ export async function GET(req: NextRequest) {
       return new NextResponse(new Uint8Array(imageBuffer), {
         headers: {
           "Content-Type": "image/jpeg",
-          "Cache-Control": "public, max-age=604800, stale-while-revalidate=86400",
+          "Cache-Control":
+            "public, max-age=604800, stale-while-revalidate=86400",
         },
       });
     }
@@ -155,7 +160,9 @@ export async function GET(req: NextRequest) {
       .toBuffer();
 
     // Save processed image to cache for instant future responses
-    try { fs.writeFileSync(cachePath, processed); } catch {}
+    try {
+      fs.writeFileSync(cachePath, processed);
+    } catch {}
 
     return new NextResponse(new Uint8Array(processed), {
       headers: {

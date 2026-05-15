@@ -109,6 +109,7 @@ export default function CheckoutPage() {
 
       setOrderNumber(data.data.number);
       clearCart();
+      window.scrollTo({ top: 0, behavior: "smooth" });
       // Email уведомление отправляется server-side в /api/orders
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : "Произошла ошибка");

@@ -172,10 +172,6 @@ export default function ProductCard({ product }: ProductCardProps) {
                     onError={() => handleImageError(index)}
                     loading={index === 0 ? "eager" : "lazy"}
                   />
-                  {/* Плашка перекрывает логотип Авито */}
-                  <div className="absolute bottom-1.5 right-1.5 z-10 px-1.5 py-0.5 bg-white/90 backdrop-blur-sm rounded text-[10px] font-semibold text-gray-400 select-none pointer-events-none">
-                    kupitstul.ru
-                  </div>
                 </div>
               ))}
             </div>
