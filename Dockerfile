@@ -35,7 +35,10 @@ ENV NODE_ENV=production
 ENV NEXT_TELEMETRY_DISABLED=1
 
 # Install openssl for Prisma engine
-RUN apk add --no-cache openssl
+# openssl1.1-compat provides libssl.so.1.1 needed by Prisma 5.x engine binaries
+# (newer Alpine ships OpenSSL 3.x only; Prisma 5.22 engine still links against 1.1)
+RUN apk add --no-cache openssl openssl1.1-compat 2>/dev/null \
+    || apk add --no-cache openssl
 
 # Create non-root user
 RUN addgroup --system --gid 1001 nodejs
