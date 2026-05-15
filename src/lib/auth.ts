@@ -8,6 +8,7 @@
  */
 
 import { NextRequest, NextResponse } from "next/server";
+import { createHmac } from "crypto";
 
 const ADMIN_USERNAME = process.env.ADMIN_USERNAME;
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD;
@@ -73,31 +74,43 @@ export function requireAdmin(request: NextRequest): NextResponse | null {
 }
 
 /**
- * Check admin session from cookie (for pages)
- * Returns true if user has valid admin session
+ * Check admin session from cookie — uses HMAC-SHA256 signature.
+ * Token = base64(username + ":" + timestamp_ms + ":" + hmac)
  */
 export function hasAdminSession(request: NextRequest): boolean {
-  if (!ADMIN_USERNAME) return false;
+  if (!ADMIN_USERNAME || !ADMIN_PASSWORD) return false;
 
   const sessionToken = request.cookies.get("admin_session")?.value;
   if (!sessionToken) return false;
 
-  // Simple token validation - in production use JWT or database sessions
   try {
-    const decoded = Buffer.from(sessionToken, "base64").toString("ascii");
-    return decoded === `${ADMIN_USERNAME}:${Date.now().toString().slice(0, 8)}`;
+    const decoded = Buffer.from(sessionToken, "base64").toString("utf8");
+    const parts = decoded.split(":");
+    if (parts.length < 3) return false;
+
+    const [user, tsStr, sig] = parts;
+    const ts = parseInt(tsStr, 10);
+
+    if (Date.now() - ts > 86_400_000) return false;
+    if (user !== ADMIN_USERNAME) return false;
+
+    const expected = createHmac("sha256", ADMIN_PASSWORD)
+      .update(`${user}:${tsStr}`)
+      .digest("hex");
+    return sig === expected;
   } catch {
     return false;
   }
 }
 
 /**
- * Create an admin session token
+ * Create an HMAC-signed admin session token
  */
 export function createAdminSession(): string {
   const name = ADMIN_USERNAME ?? "admin";
-  const token = Buffer.from(
-    `${name}:${Date.now().toString().slice(0, 8)}`,
-  ).toString("base64");
-  return token;
+  const ts = Date.now().toString();
+  const sig = createHmac("sha256", ADMIN_PASSWORD ?? "")
+    .update(`${name}:${ts}`)
+    .digest("hex");
+  return Buffer.from(`${name}:${ts}:${sig}`).toString("base64");
 }

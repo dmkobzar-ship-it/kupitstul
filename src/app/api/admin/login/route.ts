@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { createAdminSession } from "@/lib/auth";
 
 const ADMIN_USERNAME = process.env.ADMIN_USERNAME;
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD;
@@ -26,9 +27,7 @@ export async function POST(request: NextRequest) {
     }
 
     if (username === ADMIN_USERNAME && password === ADMIN_PASSWORD) {
-      const sessionToken = Buffer.from(
-        `${ADMIN_USERNAME}:${Date.now()}`,
-      ).toString("base64");
+      const sessionToken = createAdminSession();
 
       const response = NextResponse.json({
         success: true,

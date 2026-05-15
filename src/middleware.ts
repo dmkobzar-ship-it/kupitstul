@@ -1,13 +1,44 @@
 import { NextRequest, NextResponse } from "next/server";
+import { createHmac } from "crypto";
 
 // Reject requests that try to bypass Next.js middleware (CVE-2025-29927)
 const MIDDLEWARE_BYPASS_HEADER = "x-middleware-subrequest";
 
+/**
+ * Verify session token is HMAC-signed with ADMIN_PASSWORD.
+ * Token format: base64(username + ":" + timestamp_ms + ":" + hmac)
+ * This is unforgeable without knowing ADMIN_PASSWORD.
+ */
 function hasValidSession(request: NextRequest): boolean {
   const sessionToken = request.cookies.get("admin_session")?.value;
-  // Token must be a non-empty base64 string (at least 8 chars)
-  if (sessionToken && sessionToken.length >= 8) return true;
-  return false;
+  if (!sessionToken) return false;
+
+  const secret = process.env.ADMIN_PASSWORD;
+  const adminUser = process.env.ADMIN_USERNAME;
+  if (!secret || !adminUser) return false;
+
+  try {
+    const decoded = Buffer.from(sessionToken, "base64").toString("utf8");
+    const parts = decoded.split(":");
+    if (parts.length < 3) return false;
+
+    const [user, tsStr, sig] = parts;
+    const ts = parseInt(tsStr, 10);
+
+    // Token must not be older than 24 hours
+    if (Date.now() - ts > 86_400_000) return false;
+    if (user !== adminUser) return false;
+
+    // Verify HMAC signature
+    const expected = createHmac("sha256", secret)
+      .update(`${user}:${tsStr}`)
+      .digest("hex");
+    if (sig !== expected) return false;
+
+    return true;
+  } catch {
+    return false;
+  }
 }
 
 export function middleware(request: NextRequest) {
