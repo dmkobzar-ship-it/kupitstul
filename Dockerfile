@@ -70,4 +70,7 @@ EXPOSE 3000
 ENV PORT=3000
 ENV HOSTNAME="0.0.0.0"
 
+# Override node:20-alpine's default ENTRYPOINT (docker-entrypoint.sh uses /bin/sh
+# which we removed). Exec-form CMD runs node directly without any shell.
+ENTRYPOINT []
 CMD ["node", "server.js"]
