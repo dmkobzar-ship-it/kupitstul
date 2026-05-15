@@ -77,10 +77,10 @@ export default function ProductCard({ product }: ProductCardProps) {
     return "/images/no-photo.svg";
   };
 
-  // Для отображения используем минимум 1 изображение, максимум 5
-  const imageCount = Math.max(1, Math.min(allImages.length, 5));
+  // Initially load only 1 image; load up to 5 on hover to avoid 120+ simultaneous proxy requests
+  const imageCount = isHovered ? Math.min(allImages.length, 5) : 1;
   const images = Array.from({ length: imageCount }, (_, i) => getImageUrl(i));
-  const hasMultipleImages = images.length > 1;
+  const hasMultipleImages = allImages.length > 1;
 
   // Навигация по изображениям
   const goToPrevImage = useCallback(
@@ -113,7 +113,7 @@ export default function ProductCard({ product }: ProductCardProps) {
     <div
       className="group relative bg-white border border-gray-200 rounded-2xl overflow-hidden transition-all duration-300 hover:shadow-xl hover:border-gray-300"
       onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={() => setIsHovered(false)}
+      onMouseLeave={() => { setIsHovered(false); setCurrentImageIndex(0); }}
     >
       {/* Бейджи */}
       <div className="absolute top-3 left-3 z-10 flex flex-col gap-2">
@@ -172,6 +172,7 @@ export default function ProductCard({ product }: ProductCardProps) {
                     onError={() => handleImageError(index)}
                     loading={index === 0 ? "eager" : "lazy"}
                   />
+
                 </div>
               ))}
             </div>

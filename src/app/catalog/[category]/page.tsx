@@ -88,6 +88,18 @@ const categoryMeta: Record<
     description: "Садовая мебель для дачи и загородного дома.",
     h1: "Садовая мебель",
   },
+  krovati: {
+    title: "Кровати купить в Москве - Двуспальные и односпальные кровати",
+    description:
+      "Купить кровати в Москве. Двуспальные, полуторные и односпальные кровати по низким ценам. Более 180 моделей в наличии.",
+    h1: "Кровати",
+  },
+  divany: {
+    title: "Диваны купить в Москве - Угловые и прямые диваны",
+    description:
+      "Купить диваны в Москве. Угловые, прямые диваны для гостиной. Широкий выбор моделей.",
+    h1: "Диваны",
+  },
 };
 
 export const revalidate = 3600; // ISR: rebuild category pages every hour
@@ -107,13 +119,15 @@ export async function generateMetadata({
   const meta = categoryMeta[category];
   const categoryData = getImportedCategories().find((c) => c.slug === category);
 
-  if (!meta || !categoryData) {
+  if (!categoryData) {
     return { title: "Категория не найдена" };
   }
 
   return {
-    title: meta.title,
-    description: meta.description,
+    title: meta?.title || `${categoryData.name} купить в Москве`,
+    description:
+      meta?.description ||
+      `Купить ${categoryData.name.toLowerCase()} в Москве. ${categoryData.count} товаров в наличии.`,
   };
 }
 
