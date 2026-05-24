@@ -93,6 +93,15 @@ export function middleware(request: NextRequest) {
     }
   }
 
+  // Block test/debug routes in production — must not be publicly accessible
+  if (pathname.startsWith("/api/test")) {
+    if (process.env.NODE_ENV === "production") {
+      if (!hasValidSession(request)) {
+        return new NextResponse("Forbidden", { status: 403 });
+      }
+    }
+  }
+
   return NextResponse.next();
 }
 
@@ -104,5 +113,6 @@ export const config = {
     "/api/upload-file",
     "/api/import/:path*",
     "/api/orders",
+    "/api/test/:path*",
   ],
 };
